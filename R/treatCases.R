@@ -10,9 +10,9 @@
 #' @param n number of samples
 #'
 #' @details
-#' The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
+#' * The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
 #'
-#' The data frame y needs column named treatment which contains the code for all treatments together (for this function [treatGroup()]
+#' * The data frame y needs column named treatment which contains the code for all treatments together (for this function [treatGroup()]
 #' can be used). Also the first column should correspond to the names of samples in data frame x.
 #'
 #' @returns A string of the treatments code.
