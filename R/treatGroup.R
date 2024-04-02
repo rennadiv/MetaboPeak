@@ -10,7 +10,7 @@
 #' @param number.of.treatments integer of treatment columns (types of treatment)
 #'
 #' @details
-#' The format of the data frame should be: sample name|treatment groups|...
+#' * The format of the data frame should be: sample name|treatment groups|...
 #'
 #'
 #' @returns x with new column with the treatment code
