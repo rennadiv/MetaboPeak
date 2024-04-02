@@ -1,1 +1,1 @@
-adding ReadMe file
+R package for LC-MS analysis
