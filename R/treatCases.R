@@ -2,6 +2,8 @@
 #' @description
 #' Based on m/z and RT this function will return treatments in which the complete cases are.
 #'
+#' test Git
+#'
 #' @usage treatCases(x, y, mass, RT, n)
 #' @param x data frame
 #' @param y data frame - treatment info

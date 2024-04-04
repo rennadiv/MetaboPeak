@@ -3,7 +3,7 @@
 #' This function returns information about individual peaks within the whole data table (RT, m/z, % of NAs, Max intensity, Mean, SD and CV coefficient).
 #' If ID is provided, than it returns the same information, but for just this one peak.
 #'
-#' Test Git
+#' Test Git2
 #'
 #'
 #' @usage peakInfo(x, n, ID)
