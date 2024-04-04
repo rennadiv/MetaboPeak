@@ -34,11 +34,12 @@ threshold and if there are no complete cases for any treatment group, than it re
 (spearman). From this correlated group it picks the one row with max m/z. (it might take some time)
 }
 \details{
-The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+* The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 
-Treatment info must contain samples name, that corresponds with x in the 1. column and column treatment (code for combination of treatments)
+* Treatment info must contain samples name, that corresponds with x in the 1. column and column treatment
+(code for combination of treatments, use [treatGroup()])
 
-fNA and fCV can be either defined as F/FALSE or with 2 argument vector ('T', threshold). fRT can be either defined as F/FALSE, or
+* fNA and fCV can be either defined as F/FALSE or with 2 argument vector ('T', threshold). fRT can be either defined as F/FALSE, or
 with 4 argument vector ('T', how many decimal places should RT be rounded, range value in which to look for similar RT, correlation
 threshold - how well should the rows be correlated to take them as the same)
 }
