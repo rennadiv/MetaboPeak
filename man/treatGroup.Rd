@@ -23,7 +23,7 @@ Based on the given abbreviation for the names of treatment, it makes an unique c
 exposed.
 }
 \details{
-The format of the data frame should be: sample name|treatment groups|...
+* The format of the data frame should be: sample name|treatment groups|...
 }
 \examples{
 tr <- c('S','B','AC','EC','D','W','N-','N+')
