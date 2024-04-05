@@ -11,11 +11,11 @@
 #' @param n number of samples
 #'
 #' @details
-#' * The format of the data frame (x,y) should be: Peak names|abundances of samples|m.z|RT|...
+#' The format of the data frame (x,y) should be: Peak names|abundances of samples|m.z|RT|...
 #'
-#' * The masses can be either written as numeric (rounded) or as character (not rounded).
+#' The masses can be either written as numeric (rounded) or as character (not rounded).
 #'
-#' * The correlation is computed by spearman coefficiant and if there are missing values than the correlation between each pair of variables is computed using all complete pairs of observations on those variables.
+#' The correlation is computed by spearman coefficient and if there are missing values than the correlation between each pair of variables is computed using all complete pairs of observations on those variables.
 #'
 #' @returns Correlation of the two peaks.
 #'

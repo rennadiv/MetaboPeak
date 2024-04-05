@@ -9,7 +9,7 @@
 #' @param cut numeric value of the correlation cutoff
 #'
 #' @details
-#' * The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+#' The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 #'
 #'
 #'

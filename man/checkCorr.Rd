@@ -25,11 +25,11 @@ This function gives spearman correlation coefficient of two peaks, defined by th
 They can be from the same data frame, or two different data frames. The combining factor is their retention time (RT).
 }
 \details{
-* The format of the data frame (x,y) should be: Peak names|abundances of samples|m.z|RT|...
+The format of the data frame (x,y) should be: Peak names|abundances of samples|m.z|RT|...
 
-* The masses can be either written as numeric (rounded) or as character (not rounded).
+The masses can be either written as numeric (rounded) or as character (not rounded).
 
-* The correlation is computed by spearman coefficiant and if there are missing values than the correlation between each pair of variables is computed using all complete pairs of observations on those variables.
+The correlation is computed by spearman coefficient and if there are missing values than the correlation between each pair of variables is computed using all complete pairs of observations on those variables.
 }
 \examples{
 checkCorr(pos, masses = c(595.2, 449.08), RT = 11.8, n= 48)

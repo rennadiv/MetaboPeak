@@ -21,9 +21,9 @@ The function calculates CV coefficient (SD/Mean) of each peak with the given mas
 and plots abundances of all samples for the max 3 lowest CV coefficient.
 }
 \details{
-* The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 
-* The mass should be put as a string.
+The mass should be put as a string.
 }
 \examples{
 barPeaks(neg, '355.10', 48)

@@ -5,42 +5,51 @@
 #'
 #' @usage treatGroup(x, treatment_names, my_abbreviations, number.of.treatments)
 #' @param x data frame with treatment info
-#' @param treatment_names character vector of the treatment names from the x
-#' @param my_abbreviations character vector of the abbreviations you want to use
 #' @param number.of.treatments integer of treatment columns (types of treatment)
+#' @param my_abbreviations character vector of the abbreviations you want to use in alphabetical order (optional)
 #'
 #' @details
-#' * The format of the data frame should be: sample name|treatment groups|...
+#' The format of the data frame should be: sample name|treatment groups|...
+#'
+#' The vector of abbreviations has to be in alphabetical order (small cases first). If missing, then the treatment code will be formed
+#' from the names of the treatments combined by underscore.
 #'
 #'
 #' @returns x with new column with the treatment code
 #'
 #' @examples
-#' tr <- c('S','B','AC','EC','D','W','N-','N+')
-#' abb <- c('S','B','A','E','D','W','n','N')
-#' treatGroup(t_info, tr, abb, 4)
+#' abb <- c('B','S','A','E','D','W','n','N')
+#' treatGroup(t_info, 4, abb)
+#'
+#' treatGroup(t_info, 4)
 #'
 #' @export
 #'
 
 
-treatGroup <- function (x, treatment_names, my_abbreviations, number.of.treatments){
+treatGroup <- function (x, number.of.treatments, my_abbreviations){
+  if (missing(my_abbreviations)){
+    n <- 1:number.of.treatments+1
+    x.new <- apply(x[,n],1,paste,collapse = "_")
+    x$treatment <- x.new
+    x$treatment <- as.factor(x$treatment)
+    return(x)
+  } else {
   new_el <- vector('list', number.of.treatments)
   g <- c()
   j = 0
   for (i in 1:number.of.treatments+1){
     x[,i] <- as.factor(x[,i])
-    for (k in 1:(length(levels(x[,i]))-1)) {
-      new_el[[i-1]] <- ifelse(x[,i] == tr[j+k], abb[j+k], abb[j+k+1])
-      j <- j+2
+    l <- length(levels(x[,i]))
+    for (k in 1:length(levels(x[,i]))) {
+      levels(x[,i])[k] <- my_abbreviations[j+k]
+      new_el[[i-1]] <- as.character(x[,i])
     }
+    j <- j+l
     g <- paste(g,new_el[[i-1]], sep = '')
   }
   x$treatment <- as.factor(g)
   return(x)
-
+  }
 }
-
-
-
 
