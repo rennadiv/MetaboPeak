@@ -21,7 +21,7 @@ This function returns information about individual peaks within the whole data t
 If ID is provided, than it returns the same information, but for just this one peak.
 }
 \details{
-* The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
+The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
 }
 \examples{
 z <- peakInfo(neg,48)

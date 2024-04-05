@@ -22,7 +22,7 @@ A reduced data frame.
 This function provides filter by RT and their correlation.
 }
 \details{
-* The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 }
 \examples{
 peakFilterRT(neg,3,0.2,0.95)

@@ -11,7 +11,7 @@
 #'
 #'
 #' @details
-#' * The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
+#' The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
 #'
 #'
 #' @returns A data frame with all the peak information for all or for one

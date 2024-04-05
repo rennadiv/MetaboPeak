@@ -20,9 +20,9 @@ A string of the sample name.
 Given the mass (m/z) it looks for the highest value of abundance throughout the samples and returns name of the sample.
 }
 \details{
-* The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 
-* The mass should be put as a string.
+The mass should be put as a string.
 }
 \examples{
 highestAbund(neg,'593.12805',48)

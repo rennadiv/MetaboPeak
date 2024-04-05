@@ -20,9 +20,9 @@ A reduced data frame.
 This function provides filter by missing values and can be used with or without treatment information.
 }
 \details{
-* The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 
-* Treatment info must contain samples name, that corresponds with x in the 1. column and column treatment
+Treatment info must contain samples name, that corresponds with x in the 1. column and column treatment
 (code for combination of treatments, use [treatGroup()])
 }
 \examples{
