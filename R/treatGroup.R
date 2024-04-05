@@ -3,7 +3,7 @@
 #' Based on the given abbreviation for the names of treatment, it makes an unique code for each treatment combination to which the sample is
 #' exposed.
 #'
-#' @usage treatGroup(x, treatment_names, my_abbreviations, number.of.treatments)
+#' @usage treatGroup(x, number.of.treatments, my_abbreviations)
 #' @param x data frame with treatment info
 #' @param number.of.treatments integer of treatment columns (types of treatment)
 #' @param my_abbreviations character vector of the abbreviations you want to use in alphabetical order (optional)
