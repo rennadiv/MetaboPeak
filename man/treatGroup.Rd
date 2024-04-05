@@ -9,11 +9,9 @@ treatGroup(x, treatment_names, my_abbreviations, number.of.treatments)
 \arguments{
 \item{x}{data frame with treatment info}
 
-\item{treatment_names}{character vector of the treatment names from the x}
-
-\item{my_abbreviations}{character vector of the abbreviations you want to use}
-
 \item{number.of.treatments}{integer of treatment columns (types of treatment)}
+
+\item{my_abbreviations}{character vector of the abbreviations you want to use in alphabetical order (optional)}
 }
 \value{
 x with new column with the treatment code
@@ -24,10 +22,14 @@ exposed.
 }
 \details{
 The format of the data frame should be: sample name|treatment groups|...
+
+The vector of abbreviations has to be in alphabetical order (small cases first). If missing, then the treatment code will be formed
+from the names of the treatments combined by underscore.
 }
 \examples{
-tr <- c('S','B','AC','EC','D','W','N-','N+')
-abb <- c('S','B','A','E','D','W','n','N')
-treatGroup(t_info, tr, abb, 4)
+abb <- c('B','S','A','E','D','W','n','N')
+treatGroup(t_info, 4, abb)
+
+treatGroup(t_info, 4)
 
 }

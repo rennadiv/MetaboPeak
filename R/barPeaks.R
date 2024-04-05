@@ -9,9 +9,9 @@
 #' @param n number of samples
 #'
 #' @details
-#' * The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+#' The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
 #'
-#' * The mass should be put as a string.
+#' The mass should be put as a string.
 #'
 #' @returns Bar plots of max 3 peaks with similar m/z and their RT and CV coefficient.
 #'

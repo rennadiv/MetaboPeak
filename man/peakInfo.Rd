@@ -17,7 +17,7 @@ peakInfo(x, n, ID)
 A data frame with all the peak information for all or for one
 }
 \description{
-This function returns information about individual peak on all the data table (RT, m/z, % of NAs, Max intensity, Mean, SD and CV coefficient).
+This function returns information about individual peaks within the whole data table (RT, m/z, % of NAs, Max intensity, Mean, SD and CV coefficient).
 If ID is provided, than it returns the same information, but for just this one peak.
 }
 \details{

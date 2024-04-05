@@ -26,8 +26,8 @@ Based on m/z and RT this function will return treatments in which the complete c
 \details{
 The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
 
-The data frame y needs column named treatment which contains the code for all treatments together (for this function treatGroup can be used).
-Also the first column should corespond to the names of samples in data frame x.
+The data frame y needs column named treatment which contains the code for all treatments together (for this function [treatGroup()]
+can be used). Also the first column should correspond to the names of samples in data frame x.
 }
 \examples{
 treatCases(neg,t_info_group,447.12851,5.252,48)
