@@ -4,7 +4,7 @@
 \alias{treatGroup}
 \title{Unique code for combined treatment}
 \usage{
-treatGroup(x, treatment_names, my_abbreviations, number.of.treatments)
+treatGroup(x, number.of.treatments, my_abbreviations)
 }
 \arguments{
 \item{x}{data frame with treatment info}
