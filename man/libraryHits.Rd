@@ -11,14 +11,20 @@ libraryHits(x, l, RT.range, mz.range, unique)
 
 \item{l}{library (data frame)}
 
-\item{RT.range}{numeric vector with 2 values}
+\item{RT.range}{numeric value determining the range of RT}
 
-\item{mz.range}{numeric vector with 2 values}
+\item{mz.range}{numeric value determining the range of mz}
 
-\item{unique}{logical, if there should not be replicates with the same compoud name}
+\item{unique}{logical, if there should not be replicates with the same compound name}
 }
 \value{
-data frame in the fromat: RT difference|Compound name|m.z|RT|abundances of samples
+list of 3 objects (lib_small, lib_all and unique_name)
+
+* lib_small = data frame in the format: RT difference|Compound name|m.z|RT|abundances of just annotated samples
+
+* lib_all = data frame in the format: Compound name|x (all the samples, unknown = 'unknown')
+
+* unique_names = string vector of all the compound names, that have been annotated
 }
 \description{
 This function combines data frame with m/z and RT with given library.
@@ -30,6 +36,6 @@ The format of the data frame (x) should be: Peak names|abundances of samples|m.z
 The format of the library: Compound names|m.z|RT|...
 }
 \examples{
-data_new <- libraryHits(neg, pkg_lib, RT.range = c(-0.25, 0.25), mz.range = c(-0.009, 0.009), unique = T)
+data_new <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
 
 }
