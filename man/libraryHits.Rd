@@ -36,6 +36,6 @@ The format of the data frame (x) should be: Peak names|abundances of samples|m.z
 The format of the library: Compound names|m.z|RT|...
 }
 \examples{
-data_new <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
+data_library <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
 
 }

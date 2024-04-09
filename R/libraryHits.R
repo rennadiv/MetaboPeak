@@ -26,7 +26,7 @@
 #' * unique_names = string vector of all the compound names, that have been annotated
 #'
 #' @examples
-#' data_new <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
+#' data_library <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
 #'
 #' @import dplyr
 #'
