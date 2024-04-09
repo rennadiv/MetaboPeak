@@ -26,7 +26,7 @@
 #' * unique_names = string vector of all the compound names, that have been annotated
 #'
 #' @examples
-#' data_new <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
+#' data_library <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
 #'
 #' @import dplyr
 #'
@@ -60,6 +60,7 @@ libraryHits <- function(x, l, RT.range = 0.25, mz.range = 0.009, unique = T){
   m <- unlist(res)
   o <- which(colnames(mat2) == 'm.z' | colnames(mat2) == 'RT')
   lib_small <- cbind(mat1[n,], RTdiff = mat2$RT[m] - mat1$RT[n], Peak_m.z = mat2$m.z[m], Peak_RT = mat2$RT[m], mat2[m,-o])
+  colnames(lib_small)[1] <- 'Compound'
   unique_names <- unique(lib_small$Compound)
 
   df <- lib_small %>%
@@ -76,8 +77,8 @@ libraryHits <- function(x, l, RT.range = 0.25, mz.range = 0.009, unique = T){
     }
     k <- c(k,k_new)
   }
-  lib_all <- cbind(Compound = k,x)
+  lib_all <- cbind(Alignment.ID = x[,1],Compound = k,x[,-1])
 
-  output <- list('lib_small' = lib_small, 'lib_all' <- lib_all, 'unique_names' <- unique_names)
+  output <- list('lib_small' = lib_small, 'lib_all' = lib_all, 'unique_names' = unique_names)
   return(output)
 }

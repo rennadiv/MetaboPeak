@@ -4,7 +4,7 @@
 \alias{peakFilterRT}
 \title{Filter by similar RT and their correlation}
 \usage{
-peakFilterNA(x, dec, RTrange, cut)
+peakFilterRT(x, dec, RTrange, cut)
 }
 \arguments{
 \item{x}{data frame}

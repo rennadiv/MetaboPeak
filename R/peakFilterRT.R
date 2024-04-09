@@ -2,7 +2,7 @@
 #' @description
 #' This function provides filter by RT and their correlation.
 #'
-#' @usage peakFilterNA(x, dec, RTrange, cut)
+#' @usage peakFilterRT(x, dec, RTrange, cut)
 #' @param x data frame
 #' @param dec numeric value, on how many decimal places the RT should be rounded
 #' @param RTrange numeric value, which defines the range (+-) of similar RT
@@ -20,7 +20,8 @@
 #'
 #'
 #' @import dplyr
-#' @import igraph
+#'
+#'
 #' @export
 #'
 

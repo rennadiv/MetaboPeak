@@ -22,7 +22,8 @@
 #' peakFilterCV(neg, 0.8, t_info_group)
 #'
 #' @import dplyr
-#' @import igraph
+#'
+#'
 #' @export
 #'
 
