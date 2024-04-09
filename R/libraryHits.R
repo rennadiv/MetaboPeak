@@ -79,6 +79,6 @@ libraryHits <- function(x, l, RT.range = 0.25, mz.range = 0.009, unique = T){
   }
   lib_all <- cbind(Alignment.ID = x[,1],Compound = k,x[,-1])
 
-  output <- list('lib_small' = lib_small, 'lib_all' <- lib_all, 'unique_names' <- unique_names)
+  output <- list('lib_small' = lib_small, 'lib_all' = lib_all, 'unique_names' = unique_names)
   return(output)
 }
