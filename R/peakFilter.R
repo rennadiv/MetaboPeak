@@ -39,7 +39,10 @@
 #'
 #'
 #' @import dplyr
-#' @import igraph
+#' @importFrom igraph graph_from_data_frame
+#' @importFrom igraph components
+#' @importFrom stats cor
+#'
 #' @export
 #'
 

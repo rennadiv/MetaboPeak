@@ -18,6 +18,11 @@
 #' @examples
 #' barPeaks(neg, '355.10', 48)
 #'
+#' @importFrom graphics barplot
+#' @importFrom graphics par
+#' @importFrom stats complete.cases
+#' @importFrom stats sd
+#'
 #' @export
 
 

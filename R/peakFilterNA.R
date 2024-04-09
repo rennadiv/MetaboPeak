@@ -21,7 +21,6 @@
 #' peakFilterNA(neg, 0.5, t_info_group)
 #'
 #' @import dplyr
-#' @import igraph
 #' @export
 #'
 

@@ -1,6 +1,6 @@
 Package: MetaboPeak
 Type: Package
-Title: Functions to Work With Peaks from Metabolic Data Sets.
+Title: Functions to Work With Peaks from Metabolic Data Sets
 Version: 0.1.0
 Author: Renata Divinova
 Maintainer: The package maintainer <divinova.r@czechglobe.cz>
@@ -9,5 +9,11 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Depends: 
-    R (>= 2.10)
+    R (>= 2.10),
+    graphics,
+    igraph,
+    stats
 RoxygenNote: 7.2.3
+Imports: 
+    dplyr,
+
