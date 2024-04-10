@@ -1,7 +1,7 @@
 Package: MetaboPeak
 Type: Package
 Title: Functions to Work With Peaks from Metabolic Data Sets
-Version: 0.1.0
+Version: 0.1.1
 Author: Renata Divinova
 Maintainer: The package maintainer <divinova.r@czechglobe.cz>
 Description: This library helps with the exploratory analysis of peaks from metabolic data sets. There are functions, that looks for the most abundant sample based on a m/z, calculate correlations between similar peaks in the same RT but different mass or plots the same peak in different time points based on the lowest variation. It is a usefull tool for checking data quality and gaining information about your data sets.    It is recomended to use this library with the manual look through chromatograms for the best results.
