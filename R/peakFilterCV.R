@@ -34,6 +34,10 @@ peakFilterCV <- function(x, cut, y){
     x[1,1] = 0
   }
 
+  y. <- NULL
+  f1 <- NULL
+
+
 
   ## Function which looks for empty vectors
   is.empty <- function(x) length(x)==0
@@ -50,7 +54,7 @@ peakFilterCV <- function(x, cut, y){
 
     o <- which(colnames(x) == 'CV')
     x.CV <- x[! (rownames(x) %in% delete), -o]
-    return(x.NA)
+    return(x.CV)
   } else {
     y$treatment <- as.factor(y$treatment)
 
