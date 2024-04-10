@@ -37,6 +37,11 @@ peakFilterRT <- function(x, dec, RTrange, cut){
   trash <- c()
   z_filtered <- c()
   z <- x
+
+  f1 <- NULL
+  f1 <- function(x) (max(x, na.rm = T))
+
+
   for (i in 1:w) {
     # for every RT, find all the RT with the values +-r (r = given by user)
     RTs <- data_sorted[data_RTs >= as.numeric(names(my_list[i]))-as.numeric(RTrange) & data_RTs <= as.numeric(names(my_list[i]))+as.numeric(RTrange),]
