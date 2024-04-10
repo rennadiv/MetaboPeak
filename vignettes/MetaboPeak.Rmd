@@ -1,0 +1,69 @@
+---
+title: "MetaboPeak"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MetaboPeak}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is an informal and code heavy version of the upcoming MetaboPeak paper.
+
+# LC-MS data and MetaboPeak
+Liquid chromatography-mass spectrometry has emerged as a powerful analytical technique and it combines the separation capabilities of liquid chromatography with the detection and identification capabilities of mass spectrometry. LC-MS workflow involves several steps, starting with sample preparation, followed by chromatographic separation, ionization, mass analysis, and data processing. In this paper, we focus on data processing and the challenges associated with it. 
+
+The main role of MetaboPeak is to simplify and automate processes commonly done in Excel. At the same time, it offers options to link files and filter data. The whole package could be divided into 3 main groups of functions. The first and largest are features aimed at better understanding the data, peak information useful in combination with chromatograms and linking peak data to treatment information. The second group focuses on data filtering and the third on annotation and linking data to in-house library.
+
+# Defining data for MetaboPeak
+MetaboPeak is designed to work with processed data from a mass spectrometry software (MS-DIAL, MZmine, GeneData etc). Every software has a little bit different output, however with few minor changes and saving it as csv the data should be fine to use with this package. 
+
+## Data structure
+Most of the functions require data as shown in example. First column is the peak identification code, than there are the samples, mass to charge ration and retention time. In rows are the peaks with abundances for the samples and their measured m/z and RT.
+
+```{r, message=FALSE}
+library(MetaboPeak)
+head(neg)
+```
+
+Then there is the treatment information and in-house library, where for the treatment information there needs to be first column with the sample name, that correspond with the column names in previous data set and some treatment information in the next columns. For the library data set, there should be m.z and RT columns and compound names.
+
+```{r}
+head(t_info)
+head(pkg_lib)
+```
+
+## Package data
+- neg ... mass spectrometry processed data from MS-DIAL in negative mode
+- pos ... mass spectrometry processed data from MS-DIAL in positive mode
+- t_info ... table with treatment info
+- t_info_group ... table with treatment info and new column with unique code for combined treatment (output from function treatGroup)
+- pkg_lib ... table with in-house library with m/z and RT corresponding with LC-MS analyses
+
+For more information about each data set use help:
+
+```{r}
+?neg
+```
+
+# Preprocessing with MetaboPeak
+
+
+
+## Peak information
+
+## Peak correlations
+
+## Background noise variability check
+
+## Background noise variability check
+
+## Complete cases in treatment check
+
+## Top sample selection
