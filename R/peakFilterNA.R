@@ -35,6 +35,9 @@ peakFilterNA <- function(x, cut, y){
   ## Function which looks for empty vectors
   is.empty <- function(x) length(x)==0
   ## Function to not use NAs in getting maximum of a row
+  f1 <- NULL
+  y. <- NULL
+
   f1 <- function(x) (max(x, na.rm = T))
 
   if (missing(y)){
