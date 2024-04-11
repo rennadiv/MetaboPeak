@@ -51,6 +51,9 @@ peakFilter <- function (x, y, fNA = c('T',0.5), fCV = c('T', 0.8), fRT = c('T',3
   if (is.na(x[1,1])){
     x[1,1] = 0
   }
+
+  rownames(x) <- x[,1]
+
   Z <- x %>% dplyr::select(y[,1])
   rownames(Z) <- x[,1]
   colnames(Z) <- paste(colnames(Z), y$treatment, sep = '_')
