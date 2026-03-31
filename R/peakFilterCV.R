@@ -34,10 +34,7 @@ peakFilterCV <- function(x, cut, y){
     x[1,1] = 0
   }
 
-  y. <- NULL
   f1 <- NULL
-
-
 
   ## Function which looks for empty vectors
   is.empty <- function(x) length(x)==0
@@ -69,7 +66,7 @@ peakFilterCV <- function(x, cut, y){
     names(Look.at) <- trash.names
     leave <- c()
 
-    for (i in levels(y.$treatment)) {
+    for (i in levels(y$treatment)) {
       new.elements <- trash.names[complete.cases(z[trash.names,grepl(i, colnames(z))])] # going through all the treatments and looking if the peak is in all the replicants
       if (!is.empty(new.elements)){ # if there are some, then write it in the list
         for (j in new.elements) {

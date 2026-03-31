@@ -36,7 +36,6 @@ peakFilterNA <- function(x, cut, y){
   is.empty <- function(x) length(x)==0
   ## Function to not use NAs in getting maximum of a row
   f1 <- NULL
-  y. <- NULL
 
   f1 <- function(x) (max(x, na.rm = T))
 
@@ -61,7 +60,7 @@ peakFilterNA <- function(x, cut, y){
     names(Look.at) <- trash.names
     leave <- c()
 
-    for (i in levels(y.$treatment)) {
+    for (i in levels(y$treatment)) {
       new.elements <- trash.names[complete.cases(z[trash.names,grepl(i, colnames(z))])] # going through all the treatments and looking if the peak is in all the replicants
       if (!is.empty(new.elements)){ # if there are some, then write it in the list
         for (j in new.elements) {

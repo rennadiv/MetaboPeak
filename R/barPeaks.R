@@ -42,7 +42,8 @@ barPeaks <- function(x, mass, n){
     for (i in c(1:3)) {
       barplot(as.matrix(aa[i,]), main = paste('m/z =', round(a[i, number.of.samples+1],3),
                                               ',RT =',round(a[i, number.of.samples+2],2),
-                                              ',CV =', CV[rank(CV) < 4][i]), names.arg = rep('',n))
+                                              ',CV =', CV[rank(CV) < 4][i]), names.arg = rep('',n),
+              col = 'navy')
     }
   } else if (nrow(a) == 0) {
     print('This mass is not in the data frame.')
@@ -51,7 +52,8 @@ barPeaks <- function(x, mass, n){
     for (i in c(1:nrow(a))) {
       barplot(as.matrix(aa[i,]), main = paste('m/z =', round(a[i, number.of.samples+1],3),
                                               ',RT =',round(a[i,number.of.samples+2],2),
-                                              ',CV =', CV[rank(CV) < 4][i]), names.arg = rep('',n))
+                                              ',CV =', CV[rank(CV) < 4][i]), names.arg = rep('',n),
+              col = 'navy')
     }
   }
 }
