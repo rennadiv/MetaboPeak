@@ -12,12 +12,14 @@
 #' 3) based on correlated RT: it rounds the RT and orders them, than based on thresholds groups similar retention times and calculates correlation
 #' (spearman). From this correlated group it picks the one row with max m/z. (it might take some time)
 #'
-#' @usage peakFilter(x, y, fNA, fCV, fRT)
+#' @usage peakFilter(x, y, fNA, fCV, fRT, parallel, n_cors)
 #' @param x data frame
 #' @param y treatment info data table
 #' @param fNA character vector
 #' @param fCV character vector
 #' @param fRT character vector
+#' @parallel whether to check multiple groups at the same time on multiple CPU cores
+#' @n_cors number of CPU cores your function should use when running in parallel
 #'
 #' @details
 #' The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
@@ -28,6 +30,11 @@
 #' fNA and fCV can be either defined as F/FALSE or with 2 argument vector ('T', threshold). fRT can be either defined as F/FALSE, or
 #' with 4 argument vector ('T', how many decimal places should RT be rounded, range value in which to look for similar RT, correlation
 #' threshold - how well should the rows be correlated to take them as the same)
+#'
+#' parallel can be either defined as F/FALSE or T/TRUE
+#'
+#' n_cores can be set as NULL and the computer will use number of available cores -1, or it can be set as any number that would work best for
+#' used computer.
 #'
 #'
 #' @returns A reduced data frame.
@@ -47,12 +54,30 @@
 #' @export
 #'
 
-peakFilter_fast <- function(
+peakFilter <- function(
     x, y,
     fNA = c('T', 0.5),
     fCV = c('T', 0.8),
-    fRT = c('T', 3, 0.02, 0.95)
+    fRT = c('T', 3, 0.02, 0.95),
+    parallel = FALSE,
+    n_cores = NULL
 ) {
+
+  # --- SETUP PARALLEL ---
+  if (parallel) {
+    if (!requireNamespace("future.apply", quietly = TRUE)) {
+      stop("Please install 'future.apply' for parallel execution")
+    }
+    if (is.null(n_cores)) {
+      n_cores <- future::availableCores() - 1
+    }
+    future::plan(future::multisession, workers = n_cores)
+  }
+
+  # --- LOAD FAST MATRIX OPS ---
+  if (!requireNamespace("matrixStats", quietly = TRUE)) {
+    stop("Please install 'matrixStats'")
+  }
 
   # --- PREP ---
   x[x == 0] <- NA
@@ -65,14 +90,10 @@ peakFilter_fast <- function(
   colnames(Z) <- paste(colnames(Z), y$treatment, sep = '_')
 
   y$treatment <- as.factor(y$treatment)
-
-  # Convert to matrix for speed
   Z <- as.matrix(Z)
 
-  # Precompute group column indices
   group_cols <- split(seq_along(y$treatment), y$treatment)
 
-  # Helper: check if row has complete cases in ANY group
   has_complete_group <- function(mat) {
     keep_matrix <- sapply(group_cols, function(cols) {
       rowSums(!is.na(mat[, cols, drop = FALSE])) == length(cols)
@@ -80,36 +101,32 @@ peakFilter_fast <- function(
     rowSums(keep_matrix) > 0
   }
 
-  # --- 1) NA FILTER ---
+  # --- NA FILTER ---
   if (fNA[1] == 'T') {
     threshold <- as.numeric(fNA[2])
 
     pctNAs <- rowMeans(is.na(Z))
     trash <- pctNAs > threshold
 
-    keep_any_group <- has_complete_group(Z)
-
-    keep <- !trash | keep_any_group
+    keep <- !trash | has_complete_group(Z)
     Z <- Z[keep, , drop = FALSE]
   }
 
-  # --- 2) CV FILTER ---
+  # --- CV FILTER ---
   if (fCV[1] == 'T') {
     threshold <- as.numeric(fCV[2])
 
-    Mean <- rowMeans2(Z, na.rm = TRUE)
-    SD   <- rowSds(Z, na.rm = TRUE)
-    Max  <- rowMaxs(Z, na.rm = TRUE)
+    Mean <- matrixStats::rowMeans2(Z, na.rm = TRUE)
+    SD   <- matrixStats::rowSds(Z, na.rm = TRUE)
+    CV   <- SD / Mean
 
     trash <- CV > threshold
 
-    keep_any_group <- has_complete_group(Z)
-
-    keep <- !trash | keep_any_group
+    keep <- !trash | has_complete_group(Z)
     Z <- Z[keep, , drop = FALSE]
   }
 
-  # --- 3) RT FILTER ---
+  # --- RT FILTER ---
   if (fRT[1] == 'T') {
 
     digits     <- as.numeric(fRT[2])
@@ -119,58 +136,69 @@ peakFilter_fast <- function(
     rt <- round(x[rownames(Z), "RT"], digits)
     mz <- x[rownames(Z), "m.z"]
 
-    # Pre-sort once
     ord <- order(rt)
     rt <- rt[ord]
     Z  <- Z[ord, , drop = FALSE]
     mz <- mz[ord]
 
-    keep <- rep(TRUE, nrow(Z))
-
-    # Sliding window grouping (no repeated scanning)
+    # --- build RT windows ---
+    groups <- list()
     start <- 1
     n <- length(rt)
 
     while (start <= n) {
       end <- start
-
-      # expand window
       while (end < n && (rt[end+1] - rt[start]) <= rt_window) {
         end <- end + 1
       }
+      groups[[length(groups) + 1]] <- start:end
+      start <- end + 1
+    }
 
-      idx <- start:end
+    # --- FUNCTION TO PROCESS ONE GROUP ---
+    process_group <- function(idx) {
 
-      if (length(idx) > 1) {
-        sub <- Z[idx, , drop = FALSE]
+      if (length(idx) <= 1) return(rep(TRUE, length(idx)))
 
-        cmat <- suppressWarnings(
-          cor(t(sub), method = "spearman", use = "pairwise.complete.obs")
-        )
+      sub <- Z[idx, , drop = FALSE]
 
-        cmat[lower.tri(cmat, diag = TRUE)] <- NA
+      cmat <- suppressWarnings(
+        cor(t(sub), method = "spearman", use = "pairwise.complete.obs")
+      )
 
-        pairs <- which(cmat > cor_thresh, arr.ind = TRUE)
+      cmat[lower.tri(cmat, diag = TRUE)] <- NA
+      pairs <- which(cmat > cor_thresh, arr.ind = TRUE)
 
-        if (nrow(pairs) > 0) {
-          # simple grouping (avoid igraph)
-          groups <- split(pairs[,1], pairs[,2])
+      keep_local <- rep(TRUE, length(idx))
 
-          for (g in groups) {
-            rows <- unique(c(g))
+      if (nrow(pairs) > 0) {
+        groups_local <- split(pairs[,1], pairs[,2])
 
-            # compute row max efficiently
-            vals <- apply(Z[idx[rows], , drop = FALSE], 1, max, na.rm = TRUE)
+        for (g in groups_local) {
+          rows <- unique(g)
 
-            best_local <- rows[which.max(vals)]
-            remove_local <- setdiff(rows, best_local)
+          vals <- matrixStats::rowMaxs(sub[rows, , drop = FALSE], na.rm = TRUE)
+          best <- rows[which.max(vals)]
 
-            keep[idx[remove_local]] <- FALSE
-          }
+          keep_local[setdiff(rows, best)] <- FALSE
         }
       }
 
-      start <- end + 1
+      keep_local
+    }
+
+    # --- APPLY (parallel or not) ---
+    if (parallel) {
+      keep_list <- future.apply::future_lapply(groups, process_group)
+    } else {
+      keep_list <- lapply(groups, process_group)
+    }
+
+    # --- COMBINE RESULTS ---
+    keep <- rep(FALSE, nrow(Z))
+
+    for (i in seq_along(groups)) {
+      keep[groups[[i]]] <- keep_list[[i]]
     }
 
     Z <- Z[keep, , drop = FALSE]
@@ -179,7 +207,7 @@ peakFilter_fast <- function(
   # --- CLEAN COLUMN NAMES ---
   colnames(Z) <- sub("_.*$", "", colnames(Z))
 
-  # --- RETURN FORMAT ---
+  # --- OUTPUT ---
   Z_out <- data.frame(ID = rownames(Z), Z, check.names = FALSE)
   Z_out$m.z <- x[Z_out$ID, "m.z"]
   Z_out$RT  <- x[Z_out$ID, "RT"]
