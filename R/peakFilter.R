@@ -39,6 +39,7 @@
 #'
 #'
 #' @import dplyr
+#' @import matrixStats
 #' @importFrom igraph graph_from_data_frame
 #' @importFrom igraph components
 #' @importFrom stats cor
@@ -96,9 +97,9 @@ peakFilter_fast <- function(
   if (fCV[1] == 'T') {
     threshold <- as.numeric(fCV[2])
 
-    Mean <- rowMeans(Z, na.rm = TRUE)
-    SD   <- apply(Z, 1, sd, na.rm = TRUE)
-    CV   <- SD / Mean
+    Mean <- rowMeans2(Z, na.rm = TRUE)
+    SD   <- rowSds(Z, na.rm = TRUE)
+    Max  <- rowMaxs(Z, na.rm = TRUE)
 
     trash <- CV > threshold
 
