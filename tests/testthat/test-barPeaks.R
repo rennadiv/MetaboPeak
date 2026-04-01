@@ -33,9 +33,9 @@ test_that("barPeaks returns structured output", {
 # Test 2: error on wrong input
 # ------------------------
 test_that("barPeaks errors with wrong input", {
-  expect_error(barPeaks("not a dataframe", '355.12', 4))
+  expect_error(barPeaks("not a dataframe", '355.12', 5))
   expect_error(barPeaks(toy_df, '355.12', 10))
-
+  expect_error(barPeaks(toy_df, 100, 5))
 })
 
 
@@ -44,6 +44,59 @@ test_that("barPeaks errors with wrong input", {
 # ------------------------
 test_that("barPeaks handles empty data", {
   empty_df <- data.frame()
-  expect_error(barPeaks(empty_df, '355.12', 4))
+  expect_error(barPeaks(empty_df, '355.12', 5))
 })
 
+# ------------------------
+# Test 4: function respects number of samples
+# ------------------------
+test_that("barPeaks respects number of samples", {
+  res <- barPeaks(toy_df, mass = "355.12", n = 3)
+  expect_equal(ncol(res$data), 3)
+})
+
+# ------------------------
+# Test 5: selected peaks have correct mass
+# ------------------------
+
+test_that("Selected peaks have correct mass", {
+  m <- "355.12"
+  res <- barPeaks(toy_df, mass = m, n = 5)
+  selected <- toy_df[toy_df$peak %in% res$peak_names, ]
+
+  expect_true(all(selected$m.z == m))
+})
+
+# ------------------------
+# Test 6: function selects lowest CV peaks
+# ------------------------
+
+test_that("barPeaks selects lowest CV peaks", {
+
+  res <- barPeaks(toy_df, mass = "355.12", n = 5)
+
+  # CV should be sorted (lowest first)
+  expect_true(all(diff(res$CV) >= 0))
+})
+
+# ------------------------
+# Test 7: function errors when mass is not present
+# ------------------------
+
+test_that("barPeaks errors when mass is not present", {
+  expect_error(
+    barPeaks(toy_df, mass = "999", n = 3),
+    "This mass is not in the data frame"
+  )
+})
+
+# ------------------------
+# Test 8: function handles less than 3 peaks
+# ------------------------
+
+test_that("barPeaks handles less than 3 peaks", {
+
+  res <- barPeaks(toy_df, mass = "170.42", n = 5)
+
+  expect_true(length(res$mids) <= 2)
+})

@@ -1,4 +1,4 @@
-barPeaks <- function(x, mass, n){
+barPeaks_ggplot <- function(x, mass, n){
 
   library(ggplot2)
   library(tidyr)

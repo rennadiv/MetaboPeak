@@ -62,6 +62,8 @@ barPeaks <- function(x, mass, n){
   aa_top <- aa[top_idx, ]
   CV_top <- CV[top_idx]
 
+  peak_names <- toy_df[ord,1]
+
   # ---- plotting ----
   par(mfrow = c(nrow(a_top), 1))
 
@@ -84,6 +86,7 @@ barPeaks <- function(x, mass, n){
   }
 
   return(list(
+    peak_names = peak_names,
     mids = mids_list,
     CV = CV_top,
     data = aa_top
