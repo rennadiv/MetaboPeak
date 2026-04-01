@@ -25,9 +25,12 @@ highestAbund <- function(x, mass, n){
   number.of.samples <- n
   n1 <- number.of.samples+1
   a <- data[substr(data$m.z, 1, nchar(mass)) == mass, c(2:n1)]
-  if (nrow(a) > 1) {
-    print('The m/z is not unique. Use more decimal places.')
+  if (nrow(a) == 0) {
+    stop("This mass is not in the data frame.")
+  } else if (nrow(a) > 1) {
+    stop("The m/z is not unique. Use more decimal places.")
   } else {
-    colnames(a)[which(a == max(a, na.rm = T))]
+    out <- colnames(a)[which.max(as.numeric(a))]
   }
+  return(out)
 }
