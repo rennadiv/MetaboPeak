@@ -48,22 +48,23 @@ checkCorr <- function(x, y = NULL, masses, RT, n){
   g <- decimalplaces(as.numeric(mass2))
 
   df1 <- data[which(round(data$m.z,f) == mass1), c(2:n1,n1+1,n1+2)]
-  df1 <- df1[which.min(df1$RT - RT), c(1:n)]
+  df1 <- df1[which.min(abs(df1$RT - RT)), c(1:n)]
 
   df2 <- data2[which(round(data2$m.z,g) == mass2), c(2:n1,n1+1, n1+2)]
-  df2 <- df2[which.min(df2$RT - RT), c(1:n)]
+  df2 <- df2[which.min(abs(df1$RT - RT)), c(1:n)]
 
   if (nrow(df1) == 0) {
-    print('First mass is not in the data table')
+    stop('First mass is not in the data table')
   } else if (nrow(df2) == 0) {
-    print('Second mass is not in the data table')
+    stop('Second mass is not in the data table')
   } else {
     c1 <- as.vector(t(df1))
     c2 <- as.vector(t(df2))
     if (sum(is.na(c1)) > 0 | sum(is.na(c2)) > 0){
-      cor(c1,c2,method = 'spearman', use = 'pairwise.complete.obs')
+      out <- cor(c1,c2,method = 'spearman', use = 'pairwise.complete.obs')
     } else {
-      cor(c1, c2, method = 'spearman')
+      out <- cor(c1, c2, method = 'spearman')
     }
   }
+  return(out)
 }

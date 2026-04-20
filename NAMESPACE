@@ -3,6 +3,7 @@
 export(barPeaks)
 export(checkCorr)
 export(highestAbund)
+export(interestRegion)
 export(libraryHits)
 export(peakFilter)
 export(peakFilterCV)
