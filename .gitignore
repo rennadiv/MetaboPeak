@@ -1,7 +1,17 @@
-.Rproj.user
+# R files
 .Rhistory
-.Rdata
-.httr-oauth
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Obsidian (IMPORTANT if vault is inside repo)
+.obsidian/
+
+# RStudio / temp files
+*.Rproj.user
+*.Rhistory
+*.RData
+
+# OS files
 .DS_Store
-.quarto
-inst/doc
+Thumbs.db
