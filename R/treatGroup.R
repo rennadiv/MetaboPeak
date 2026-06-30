@@ -48,7 +48,7 @@ treatGroup <- function (x, number.of.treatments, my_abbreviations){
     j <- j+l
     g <- paste(g,new_el[[i-1]], sep = '')
   }
-  x$treatment <- as.factor(g)
+  x$Treatment <- as.factor(g)
   return(x)
   }
 }
