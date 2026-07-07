@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+This vignette demonstrates a complete metabolomics workflow using the example datasets included in the package. The data originate from a metabolomics experiment investigating the effects of elevated CO2,  and drought on two tree species.
 This is an informal and code heavy version of the upcoming MetaboPeak paper.
 
 # LC-MS data and MetaboPeak
@@ -24,11 +25,17 @@ The main role of MetaboPeak is to simplify and automate processes commonly done 
 # Defining data for MetaboPeak
 MetaboPeak is designed to work with processed data from a mass spectrometry software (MS-DIAL, MZmine, GeneData etc). Every software has a little bit different output, however with few minor changes and saving it as csv the data should be fine to use with this package. 
 
-## Data structure
-Most of the functions require data as shown in example. First column is the peak identification code, than there are the samples, mass to charge ration and retention time. In rows are the peaks with abundances for the samples and their measured m/z and RT.
+## Package data
+- neg ... mass spectrometry processed data from MS-DIAL in negative mode
+- pos ... mass spectrometry processed data from MS-DIAL in positive mode
+- t_info ... table with treatment info
+- pkg_lib ... table with in-house library with m/z and RT corresponding with LC-MS analyses
+
+### Data structure
+Most of the functions require mass spectrometry data as shown in example. First column is the peak identification code, than there are the samples, mass to charge ration and retention time. In rows are the peaks with abundances for the samples and their measured m/z and RT.
 
 ```{r, message=FALSE}
-library(MetaboPeak)
+library(MetaboPeak) # if not working then go to working directory where the package is and then by devtools load_all(".")
 head(neg)
 ```
 
@@ -39,12 +46,7 @@ head(t_info)
 head(pkg_lib)
 ```
 
-## Package data
-- neg ... mass spectrometry processed data from MS-DIAL in negative mode
-- pos ... mass spectrometry processed data from MS-DIAL in positive mode
-- t_info ... table with treatment info
-- t_info_group ... table with treatment info and new column with unique code for combined treatment (output from function treatGroup)
-- pkg_lib ... table with in-house library with m/z and RT corresponding with LC-MS analyses
+
 
 For more information about each data set use help:
 
@@ -53,14 +55,11 @@ For more information about each data set use help:
 ```
 
 # Preprocessing with MetaboPeak
-
-
+The example dataset included with the package has already been processed using `treatGroup()`, which makes and unique code for combination of treatments. When analyzing your own experiments, apply `treatGroup()` to your treatment table before using downstream functions.
 
 ## Peak information
 
 ## Peak correlations
-
-## Background noise variability check
 
 ## Background noise variability check
 
