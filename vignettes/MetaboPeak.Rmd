@@ -3,8 +3,11 @@ title: "MetaboPeak"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{MetaboPeak}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r, include = FALSE}
@@ -14,39 +17,52 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette demonstrates a complete metabolomics workflow using the example datasets included in the package. The data originate from a metabolomics experiment investigating the effects of elevated CO2,  and drought on two tree species.
+This vignette demonstrates a complete metabolomics workflow using the example datasets included in the package.
+The data originate from a metabolomics experiment investigating the effects of elevated CO2, and drought on two tree species.
 This is an informal and code heavy version of the upcoming MetaboPeak paper.
 
 # LC-MS data and MetaboPeak
-Liquid chromatography-mass spectrometry has emerged as a powerful analytical technique and it combines the separation capabilities of liquid chromatography with the detection and identification capabilities of mass spectrometry. LC-MS workflow involves several steps, starting with sample preparation, followed by chromatographic separation, ionization, mass analysis, and data processing. In this paper, we focus on data processing and the challenges associated with it. 
 
-The main role of MetaboPeak is to simplify and automate processes commonly done in Excel. At the same time, it offers options to link files and filter data. The whole package could be divided into 3 main groups of functions. The first and largest are features aimed at better understanding the data, peak information useful in combination with chromatograms and linking peak data to treatment information. The second group focuses on data filtering and the third on annotation and linking data to in-house library.
+Liquid chromatography-mass spectrometry has emerged as a powerful analytical technique and it combines the separation capabilities of liquid chromatography with the detection and identification capabilities of mass spectrometry.
+LC-MS workflow involves several steps, starting with sample preparation, followed by chromatographic separation, ionization, mass analysis, and data processing.
+In this paper, we focus on data processing and the challenges associated with it.
+
+The main role of MetaboPeak is to simplify and automate processes commonly done in Excel.
+At the same time, it offers options to link files and filter data.
+The whole package could be divided into 3 main groups of functions.
+The first and largest are features aimed at better understanding the data, peak information useful in combination with chromatograms and linking peak data to treatment information.
+The second group focuses on data filtering and the third on annotation and linking data to in-house library.
 
 # Defining data for MetaboPeak
-MetaboPeak is designed to work with processed data from a mass spectrometry software (MS-DIAL, MZmine, GeneData etc). Every software has a little bit different output, however with few minor changes and saving it as csv the data should be fine to use with this package. 
+
+MetaboPeak is designed to work with processed data from a mass spectrometry software (MS-DIAL, MZmine, GeneData etc).
+Every software has a little bit different output, however with few minor changes and saving it as csv the data should be fine to use with this package.
 
 ## Package data
+
 - neg ... mass spectrometry processed data from MS-DIAL in negative mode
 - pos ... mass spectrometry processed data from MS-DIAL in positive mode
 - t_info ... table with treatment info
 - pkg_lib ... table with in-house library with m/z and RT corresponding with LC-MS analyses
 
 ### Data structure
-Most of the functions require mass spectrometry data as shown in example. First column is the peak identification code, than there are the samples, mass to charge ration and retention time. In rows are the peaks with abundances for the samples and their measured m/z and RT.
+
+Most of the functions require mass spectrometry data as shown in example.
+First column is the peak identification code, than there are the samples, mass to charge ration and retention time.
+In rows are the peaks with abundances for the samples and their measured m/z and RT.
 
 ```{r, message=FALSE}
 library(MetaboPeak) # if not working then go to working directory where the package is and then by devtools load_all(".")
 head(neg)
 ```
 
-Then there is the treatment information and in-house library, where for the treatment information there needs to be first column with the sample name, that correspond with the column names in previous data set and some treatment information in the next columns. For the library data set, there should be m.z and RT columns and compound names.
+Then there is the treatment information and in-house library, where for the treatment information there needs to be first column with the sample name, that correspond with the column names in previous data set and some treatment information in the next columns.
+For the library data set, there should be m.z and RT columns and compound names.
 
 ```{r}
 head(t_info)
 head(pkg_lib)
 ```
-
-
 
 For more information about each data set use help:
 
@@ -55,30 +71,53 @@ For more information about each data set use help:
 ```
 
 # Preprocessing with MetaboPeak
-The example dataset included with the package has already been processed using `treatGroup()`, which makes and unique code for combination of treatments. When analyzing your own experiments, apply `treatGroup()` to your treatment table before using downstream functions.
+
+The example dataset included with the package has already been processed using `treatGroup()`, which makes and unique code for combination of treatments.
+When analyzing your own experiments, apply `treatGroup()` to your treatment table before using downstream functions.
 
 ## Data filtering
-Metabolomic datasets generated by mass spectrometry are typically massive, often containing thousands of peaks. Many of these peaks represent background noise, unstable measurements, or redundant signals (such as isotopic patterns or adducts) that can decrease statistical power. Filtering your data reduces this noise, shrinks file sizes, and ensures that down-stream statistical analyses are focused only on high-quality, biologically meaningful features.The package provides a comprehensive, multi-stage filtering function called `peakFilter()`. It allows you to apply three distinct filtering strategies sequentially or independently.
+
+Metabolomic datasets generated by mass spectrometry are typically massive, often containing thousands of peaks.
+Many of these peaks represent background noise, unstable measurements, or redundant signals (such as isotopic patterns or adducts) that can decrease statistical power.
+Filtering your data reduces this noise, shrinks file sizes, and ensures that down-stream statistical analyses are focused only on high-quality, biologically meaningful features.The package provides a comprehensive, multi-stage filtering function called `peakFilter()`.
+It allows you to apply three distinct filtering strategies sequentially or independently.
+
 ### NA (missing values) filter
-Missing values (recorded as NA or 0) are highly common in metabolomics due to compound concentrations falling below the instrument's limit of detection. However, excessive missingness across a dataset makes a peak statistically unusable.
 
-- How it works: This filter evaluates the percentage of missing values (NA) for every single peak (row) across the entire dataset. If a peak's total percentage of missing values exceeds your specified threshold, it is flagged for removal.
+Missing values (recorded as NA or 0) are highly common in metabolomics due to compound concentrations falling below the instrument's limit of detection.
+However, excessive missingness across a dataset makes a peak statistically unusable.
 
-- The "Complete Case" Exception: To prevent the accidental deletion of important biomarkers, the filter includes a safety check. If a peak is completely present (has zero missing values) within even a single treatment group, it is saved and kept in the dataset. This ensures you do not throw away a compound that is completely absent in your control group but highly abundant in your treated group.
+- How it works: This filter evaluates the percentage of missing values (NA) for every single peak (row) across the entire dataset.
+  If a peak's total percentage of missing values exceeds your specified threshold, it is flagged for removal.
+
+- The "Complete Case" Exception: To prevent the accidental deletion of important biomarkers, the filter includes a safety check.
+  If a peak is completely present (has zero missing values) within even a single treatment group, it is saved and kept in the dataset.
+  This ensures you do not throw away a compound that is completely absent in your control group but highly abundant in your treated group.
+
 ### CV (Coefficient of Variation) filter
-The Coefficient of Variation (CV) measures technical variation and reproducibility. It is calculated by dividing the standard deviation of a peak's intensity by its mean value (\(\text{CV} = \sigma / \mu\)). A high CV means the peak's measurements are highly unstable and noisy.
 
-- How it works: The function calculates the CV for each peak across all samples. If a peak's CV is higher than your defined threshold (e.g., 0.8 or 80% variation), it is flagged as unreliable.
+The Coefficient of Variation (CV) measures technical variation and reproducibility.
+It is calculated by dividing the standard deviation of a peak's intensity by its mean value ($\text{CV} = \sigma / \mu$).
+A high CV means the peak's measurements are highly unstable and noisy.
 
-- The "Complete Case" Exception: Just like the NA filter, the CV filter protects potentially critical group-specific features. If a peak has a perfectly complete set of non-missing values within at least one treatment group, it bypasses the CV cutoff and is safely retained.
+- How it works: The function calculates the CV for each peak across all samples.
+  If a peak's CV is higher than your defined threshold (e.g., 0.8 or 80% variation), it is flagged as unreliable.
+
+- The "Complete Case" Exception: Just like the NA filter, the CV filter protects potentially critical group-specific features.
+  If a peak has a perfectly complete set of non-missing values within at least one treatment group, it bypasses the CV cutoff and is safely retained.
+
 ### RT (Retention Time & Correlation) filter
-In liquid chromatography-mass spectrometry (LC-MS), a single metabolite can generate multiple distinct peaks due to in-source fragmentation, isotopes, or different adducts. These redundant peaks share the same retention time (RT) and their intensities fluctuate identically across samples.
+
+In liquid chromatography-mass spectrometry (LC-MS), a single metabolite can generate multiple distinct peaks due to in-source fragmentation, isotopes, or different adducts.
+These redundant peaks share the same retention time (RT) and their intensities fluctuate identically across samples.
 
 - How it works: This filter groups peaks using a two-step network analysis approach:
-    - Sliding RT Window: It rounds and groups peaks that fall within a tight Retention Time window (e.g., 0.02 minutes).
-    - Spearman Correlation Graph: Within each RT window, it calculates the pairwise Spearman correlation of peak intensities across all samples. Pairs that exceed your correlation threshold (e.g., 0.95) are linked together to build an interconnected network graph.
-    
-- Peak De-duplication: For each interconnected cluster of redundant peaks, the algorithm keeps only one representative feature—the peak with the highest mass-to-charge ratio (m.z). All other highly correlated companion peaks within that cluster are safely removed, effectively de-duplicating your data.
+
+  - Sliding RT Window: It rounds and groups peaks that fall within a tight Retention Time window (e.g., 0.02 minutes).
+  - Spearman Correlation Graph: Within each RT window, it calculates the pairwise Spearman correlation of peak intensities across all samples. Pairs that exceed your correlation threshold (e.g., 0.95) are linked together to build an interconnected network graph.
+
+- Peak De-duplication: For each interconnected cluster of redundant peaks, the algorithm keeps only one representative feature—the peak with the highest mass-to-charge ratio (m.z).
+  All other highly correlated companion peaks within that cluster are safely removed, effectively de-duplicating your data.
 
 ### Quick Example
 

@@ -3,3 +3,5 @@
 ^LICENSE\.md$
 ^docs$
 ^pkgdown$
+^\.positai$
+^\.claude$
