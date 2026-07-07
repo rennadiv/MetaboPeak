@@ -4,7 +4,7 @@
 \alias{peakFilter}
 \title{Filter by NA, CV coefficient and/or correlated RT}
 \usage{
-peakFilter(x, y, fNA, fCV, fRT)
+peakFilter(x, y, fNA, fCV, fRT, parallel, n_cors)
 }
 \arguments{
 \item{x}{data frame}
@@ -42,6 +42,11 @@ Treatment info must contain samples name, that corresponds with x in the 1. colu
 fNA and fCV can be either defined as F/FALSE or with 2 argument vector ('T', threshold). fRT can be either defined as F/FALSE, or
 with 4 argument vector ('T', how many decimal places should RT be rounded, range value in which to look for similar RT, correlation
 threshold - how well should the rows be correlated to take them as the same)
+
+parallel can be either defined as F/FALSE or T/TRUE
+
+n_cores can be set as NULL and the computer will use number of available cores -1, or it can be set as any number that would work best for
+used computer.
 }
 \examples{
 peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = F, fRT = F)

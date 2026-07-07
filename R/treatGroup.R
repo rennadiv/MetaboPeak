@@ -15,7 +15,7 @@
 #' from the names of the treatments combined by underscore.
 #'
 #'
-#' @returns x with new column with the treatment code
+#' @returns data frame containing all original columns of \code{x} with new column with the unique treatment code
 #'
 #' @examples
 #' abb <- c('B','S','A','E','D','W','n','N')

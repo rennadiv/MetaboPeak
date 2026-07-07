@@ -1,59 +1,42 @@
 #' @title Filter by NA, CV coefficient and/or correlated RT
+#'
 #' @description
-#' This function provides 3 types of filters. It needs the abundances table, treatment info with combined treatment code under the column
-#' treatment (function treatGroup can be used to make this code) and some thresholds.
+#' This function provides 3 types of filters for metabolomics peak data. It utilizes an
+#' abundances table, sample-to-treatment mapping data, and customizable parameter thresholds.
 #'
-#' 1) based on NA values: it calculates which peaks (rows) have more NAs than
-#' threshold and if there are no complete cases for any treatment group, than it removes those rows.
+#' 1) Based on NA values: Removes peaks exceeding the missingness threshold, unless
+#' the peak has complete measurements (no NAs) in at least one treatment group.
 #'
-#' 2) based on CV coefficient: it calculates which peaks (rows) have bigger CV coefficient than
-#' threshold and if there are no complete cases for any treatment group, than it removes those rows.
+#' 2) Based on CV coefficient: Removes peaks with a Coefficient of Variation exceeding
+#' the threshold, unless the peak has complete measurements in at least one treatment group.
 #'
-#' 3) based on correlated RT: it rounds the RT and orders them, than based on thresholds groups similar retention times and calculates correlation
-#' (spearman). From this correlated group it picks the one row with max m/z. (it might take some time)
+#' 3) Based on correlated RT: Groups peaks with similar retention times (RT). Within each
+#' group, it constructs a network graph of pairs exceeding a Spearman correlation threshold.
+#' From each connected network component, it retains only the single peak with the maximum m/z value.
 #'
-#' @usage peakFilter(x, y, fNA, fCV, fRT, parallel, n_cors)
-#' @param x data frame
-#' @param y treatment info data table
-#' @param fNA character vector
-#' @param fCV character vector
-#' @param fRT character vector
-#' @parallel whether to check multiple groups at the same time on multiple CPU cores
-#' @n_cors number of CPU cores your function should use when running in parallel
+#' @usage peakFilter(x, y, fNA, fCV, fRT, parallel, n_cores)
 #'
-#' @details
-#' The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+#' @param x Data frame. Format must be: Peak names/IDs in column 1, followed by sample abundance columns, "m.z", and "RT".
+#' @param y Treatment mapping data frame. Column 1 must match the sample column names in \code{x}. Must contain a column named \code{Treatment}.
+#' @param fNA Vector. Either \code{FALSE} or a 2-element vector: \code{c('T', threshold_fraction)}. Default is \code{c('T', 0.5)}.
+#' @param fCV Vector. Either \code{FALSE} or a 2-element vector: \code{c('T', threshold_cv)}. Default is \code{c('T', 0.8)}.
+#' @param fRT Vector. Either \code{FALSE} or a 4-element vector: \code{c('T', rounding_digits, rt_window, correlation_threshold)}. Default is \code{c('T', 3, 0.02, 0.95)}.
+#' @param parallel Logical. Set to \code{TRUE} to check multiple retention time windows concurrently across multiple CPU cores. Default is \code{FALSE}.
+#' @param n_cores Numeric. Number of CPU cores to utilize. If \code{NULL}, defaults to available cores minus 1.
 #'
-#' Treatment info must contain samples name, that corresponds with x in the 1. column and column treatment
-#' (code for combination of treatments, use [treatGroup()])
-#'
-#' fNA and fCV can be either defined as F/FALSE or with 2 argument vector ('T', threshold). fRT can be either defined as F/FALSE, or
-#' with 4 argument vector ('T', how many decimal places should RT be rounded, range value in which to look for similar RT, correlation
-#' threshold - how well should the rows be correlated to take them as the same)
-#'
-#' parallel can be either defined as F/FALSE or T/TRUE
-#'
-#' n_cores can be set as NULL and the computer will use number of available cores -1, or it can be set as any number that would work best for
-#' used computer.
-#'
-#'
-#' @returns A reduced data frame.
+#' @returns A reduced data frame containing all original columns of \code{x}, filtered by the selected criteria.
 #'
 #' @examples
-#' peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = F, fRT = F)
-#' peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = c('T', 0.4), fRT = F)
-#' peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = c('T', 0.4), fRT = c('T',3,0.2,0.95)
-#'
+#' # Example data setup assumed (neg dataset and t_info_group table)
+#' # peakFilter(neg, t_info_group, fNA = c('T', 0.5), fCV = FALSE, fRT = FALSE)
+#' # peakFilter(neg, t_info_group, fNA = c('T', 0.5), fCV = c('T', 0.4), fRT = FALSE)
 #'
 #' @import dplyr
 #' @import matrixStats
-#' @importFrom igraph graph_from_data_frame
-#' @importFrom igraph components
+#' @importFrom igraph graph_from_data_frame components
 #' @importFrom stats cor
 #'
 #' @export
-#'
-
 peakFilter <- function(
     x, y,
     fNA = c('T', 0.5),
@@ -63,154 +46,188 @@ peakFilter <- function(
     n_cores = NULL
 ) {
 
-  # --- SETUP PARALLEL ---
+  # --- REQUIRE CORE PACKAGES ---
+  if (!requireNamespace("matrixStats", quietly = TRUE)) {
+    stop("Please install 'matrixStats' to run this function.")
+  }
+
+  # --- PARALLEL SESSION MANAGEMENT ---
   if (parallel) {
     if (!requireNamespace("future.apply", quietly = TRUE)) {
-      stop("Please install 'future.apply' for parallel execution")
+      stop("Please install 'future.apply' for parallel execution capabilities.")
     }
+
+    # Save user's current parallel configuration
+    old_plan <- future::plan()
+    # Explicitly revert to normal sequential R on exit to release background memory/CPU resources
+    on.exit(future::plan(old_plan), add = TRUE)
+
     if (is.null(n_cores)) {
-      n_cores <- future::availableCores() - 1
+      n_cores <- max(1, future::availableCores() - 1)
     }
     future::plan(future::multisession, workers = n_cores)
   }
 
-  # --- LOAD FAST MATRIX OPS ---
-  if (!requireNamespace("matrixStats", quietly = TRUE)) {
-    stop("Please install 'matrixStats'")
-  }
+  # --- INITIAL PROCESSING & CLEANING ---
+  # Work on a copy to prevent overriding global variables
+  x_clean <- x
 
-  # --- PREP ---
-  x[x == 0] <- NA
-  if (is.na(x[1,1])) x[1,1] <- 0
+  # Ensure index values of 0 are treated as missing values (NA)
+  sample_names <- as.character(y[, 1])
+  abundance_matrix <- as.matrix(x_clean[, sample_names, drop = FALSE])
+  abundance_matrix[abundance_matrix == 0] <- NA
 
-  rownames(x) <- x[,1]
+  # Ensure row identities are cleanly mapped to character coordinates
+  rownames(abundance_matrix) <- as.character(x_clean[, 1])
 
-  Z <- x[, y[,1], drop = FALSE]
-  rownames(Z) <- x[,1]
-  colnames(Z) <- paste(colnames(Z), y$treatment, sep = '_')
+  # Cache treatment groupings
+  y$Treatment <- as.factor(y$Treatment)
+  group_cols <- split(seq_along(y$Treatment), y$Treatment)
 
-  y$treatment <- as.factor(y$treatment)
-  Z <- as.matrix(Z)
-
-  group_cols <- split(seq_along(y$treatment), y$treatment)
-
+  # Helper function to detect rows with complete cases within any single treatment group
   has_complete_group <- function(mat) {
     keep_matrix <- sapply(group_cols, function(cols) {
       rowSums(!is.na(mat[, cols, drop = FALSE])) == length(cols)
     })
+    if (is.vector(keep_matrix)) return(keep_matrix) # handling single row outputs safely
     rowSums(keep_matrix) > 0
   }
 
-  # --- NA FILTER ---
-  if (fNA[1] == 'T') {
+  # --- 1) NA FILTERING SCENARIO ---
+  if (is.character(fNA) && fNA[1] == 'T') {
     threshold <- as.numeric(fNA[2])
+    pctNAs <- rowMeans(is.na(abundance_matrix))
 
-    pctNAs <- rowMeans(is.na(Z))
-    trash <- pctNAs > threshold
-
-    keep <- !trash | has_complete_group(Z)
-    Z <- Z[keep, , drop = FALSE]
+    # Keep the row if it passes the threshold OR contains a completely full treatment category
+    keep_na <- (pctNAs <= threshold) | has_complete_group(abundance_matrix)
+    abundance_matrix <- abundance_matrix[keep_na, , drop = FALSE]
   }
 
-  # --- CV FILTER ---
-  if (fCV[1] == 'T') {
+  # --- 2) CV FILTERING SCENARIO ---
+  if (is.character(fCV) && fCV[1] == 'T') {
     threshold <- as.numeric(fCV[2])
 
-    Mean <- matrixStats::rowMeans2(Z, na.rm = TRUE)
-    SD   <- matrixStats::rowSds(Z, na.rm = TRUE)
-    CV   <- SD / Mean
+    # Calculate group-specific CVs to protect true biomarkers
+    # without letting high-noise global peaks slip through
+    group_cv_pass <- sapply(group_cols, function(cols) {
+      sub_mat <- abundance_matrix[, cols, drop = FALSE]
+      g_mean  <- matrixStats::rowMeans2(sub_mat, na.rm = TRUE)
+      g_sd    <- matrixStats::rowSds(sub_mat, na.rm = TRUE)
+      g_cv    <- g_sd / g_mean
 
-    trash <- CV > threshold
+      # A group passes if its internal variance is stable (under threshold)
+      # OR if it's mostly empty (handled by NA filter anyway, so we don't punish it here)
+      is.na(g_cv) | (g_cv <= threshold)
+    })
 
-    keep <- !trash | has_complete_group(Z)
-    Z <- Z[keep, , drop = FALSE]
+    # Handle single-row edge case safety mapping
+    if (is.vector(group_cv_pass)) {
+      keep_cv <- any(group_cv_pass)
+    } else {
+      keep_cv <- rowSums(group_cv_pass) > 0
+    }
+
+    abundance_matrix <- abundance_matrix[keep_cv, , drop = FALSE]
   }
 
-  # --- RT FILTER ---
-  if (fRT[1] == 'T') {
+  # --- 3) RT FILTERING SCENARIO ---
+  if (is.character(fRT) && fRT[1] == 'T') {
+    if (!requireNamespace("igraph", quietly = TRUE)) {
+      stop("Please install the 'igraph' library to run the RT structural network filter.")
+    }
 
     digits     <- as.numeric(fRT[2])
     rt_window  <- as.numeric(fRT[3])
     cor_thresh <- as.numeric(fRT[4])
 
-    rt <- round(x[rownames(Z), "RT"], digits)
-    mz <- x[rownames(Z), "m.z"]
+    # Subset matching data coordinates smoothly
+    current_ids <- rownames(abundance_matrix)
+    matched_indices <- match(current_ids, x_clean[, 1])
 
-    ord <- order(rt)
-    rt <- rt[ord]
-    Z  <- Z[ord, , drop = FALSE]
-    mz <- mz[ord]
+    rt <- round(x_clean[matched_indices, "RT"], digits)
+    mz <- x_clean[matched_indices, "m.z"]
 
-    # --- build RT windows ---
+    # Order rows to track sequential RT steps smoothly
+    ord  <- order(rt)
+    rt   <- rt[ord]
+    mz   <- mz[ord]
+    abundance_matrix <- abundance_matrix[ord, , drop = FALSE]
+    current_ids      <- current_ids[ord]
+
+    # Generate sliding window grouping arrays
     groups <- list()
-    start <- 1
-    n <- length(rt)
+    start  <- 1
+    n      <- length(rt)
 
     while (start <= n) {
       end <- start
-      while (end < n && (rt[end+1] - rt[start]) <= rt_window) {
+      while (end < n && (rt[end + 1] - rt[start]) <= rt_window) {
         end <- end + 1
       }
       groups[[length(groups) + 1]] <- start:end
       start <- end + 1
     }
 
-    # --- FUNCTION TO PROCESS ONE GROUP ---
+    # Isolated processing loop for finding network redundancies
     process_group <- function(idx) {
+      if (length(idx) <= 1) return(current_ids[idx])
 
-      if (length(idx) <= 1) return(rep(TRUE, length(idx)))
+      sub_mat <- abundance_matrix[idx, , drop = FALSE]
+      sub_ids <- current_ids[idx]
+      sub_mz  <- mz[idx]
 
-      sub <- Z[idx, , drop = FALSE]
-
+      # Compute pairwise Spearman metrics
       cmat <- suppressWarnings(
-        cor(t(sub), method = "spearman", use = "pairwise.complete.obs")
+        cor(t(sub_mat), method = "spearman", use = "pairwise.complete.obs")
       )
 
+      rownames(cmat) <- sub_ids
+      colnames(cmat) <- sub_ids
+
+      # Isolate strong correlation matches
       cmat[lower.tri(cmat, diag = TRUE)] <- NA
       pairs <- which(cmat > cor_thresh, arr.ind = TRUE)
 
-      keep_local <- rep(TRUE, length(idx))
+      if (nrow(pairs) == 0) return(sub_ids)
 
-      if (nrow(pairs) > 0) {
-        groups_local <- split(pairs[,1], pairs[,2])
+      # Build dynamic network tracking maps using igraph
+      edges <- data.frame(
+        from = sub_ids[pairs[, 1]],
+        to   = sub_ids[pairs[, 2]],
+        stringsAsFactors = FALSE
+      )
 
-        for (g in groups_local) {
-          rows <- unique(g)
+      g <- igraph::graph_from_data_frame(edges, directed = FALSE, vertices = sub_ids)
+      comp <- igraph::components(g)
 
-          vals <- matrixStats::rowMaxs(sub[rows, , drop = FALSE], na.rm = TRUE)
-          best <- rows[which.max(vals)]
+      # For each interconnected cluster, extract the node containing the max m/z value
+      peak_map <- data.frame(id = sub_ids, cluster = comp$membership, mz = sub_mz, stringsAsFactors = FALSE)
 
-          keep_local[setdiff(rows, best)] <- FALSE
-        }
-      }
+      retained_ids <- peak_map %>%
+        dplyr::group_by(cluster) %>%
+        dplyr::slice_max(order_by = mz, n = 1, with_ties = FALSE) %>%
+        dplyr::pull(id)
 
-      keep_local
+      return(retained_ids)
     }
 
-    # --- APPLY (parallel or not) ---
+    # Execution pathways
     if (parallel) {
-      keep_list <- future.apply::future_lapply(groups, process_group)
+      kept_ids_list <- future.apply::future_lapply(groups, process_group)
     } else {
-      keep_list <- lapply(groups, process_group)
+      kept_ids_list <- lapply(groups, process_group)
     }
 
-    # --- COMBINE RESULTS ---
-    keep <- rep(FALSE, nrow(Z))
-
-    for (i in seq_along(groups)) {
-      keep[groups[[i]]] <- keep_list[[i]]
-    }
-
-    Z <- Z[keep, , drop = FALSE]
+    final_kept_ids <- unlist(kept_ids_list)
+    abundance_matrix <- abundance_matrix[rownames(abundance_matrix) %in% final_kept_ids, , drop = FALSE]
   }
 
-  # --- CLEAN COLUMN NAMES ---
-  colnames(Z) <- sub("_.*$", "", colnames(Z))
+  # --- CLEAN RETAINED ROWSETS AND RETURN ORIGINAL SCHEMA ---
+  final_row_names <- rownames(abundance_matrix)
+  output_data <- x[x[, 1] %in% final_row_names, , drop = FALSE]
 
-  # --- OUTPUT ---
-  Z_out <- data.frame(ID = rownames(Z), Z, check.names = FALSE)
-  Z_out$m.z <- x[Z_out$ID, "m.z"]
-  Z_out$RT  <- x[Z_out$ID, "RT"]
+  # Ensure the output row order precisely aligns with our filtered matrix state
+  output_data <- output_data[match(final_row_names, output_data[, 1]), , drop = FALSE]
 
-  return(Z_out)
+  return(output_data)
 }
