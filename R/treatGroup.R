@@ -27,29 +27,39 @@
 #'
 
 
-treatGroup <- function (x, number.of.treatments, my_abbreviations){
-  if (missing(my_abbreviations)){
-    n <- 1:number.of.treatments+1
-    x.new <- apply(x[,n],1,paste,collapse = "_")
-    x$treatment <- x.new
-    x$treatment <- as.factor(x$treatment)
-    return(x)
+treatGroup <- function(x, number.of.treatments, my_abbreviations = NULL) {
+  # 1. Safely identify the treatment columns (Columns 2 to number.of.treatments + 1)
+  target_cols <- 2:(number.of.treatments + 1)
+
+  # 2. Extract just the columns we want to work with
+  treatment_data <- x[, target_cols, drop = FALSE]
+
+  if (is.null(my_abbreviations)) {
+    # If no abbreviations, paste columns together separated by "_"
+    x$Treatment <- interaction(treatment_data, sep = "_")
+
   } else {
-  new_el <- vector('list', number.of.treatments)
-  g <- c()
-  j = 0
-  for (i in 1:number.of.treatments+1){
-    x[,i] <- as.factor(x[,i])
-    l <- length(levels(x[,i]))
-    for (k in 1:length(levels(x[,i]))) {
-      levels(x[,i])[k] <- my_abbreviations[j+k]
-      new_el[[i-1]] <- as.character(x[,i])
+    # If abbreviations exist, map them over the factor levels efficiently
+    # Split abbreviations into a list matching the number of levels per column
+    col_level_counts <- sapply(treatment_data, function(col) length(unique(col)))
+
+    # Check if the user provided the correct total number of abbreviations
+    if (sum(col_level_counts) != length(my_abbreviations)) {
+      stop("The number of abbreviations does not match the total number of unique factor levels.")
     }
-    j <- j+l
-    g <- paste(g,new_el[[i-1]], sep = '')
+
+    # Split the abbreviation vector into a list for each column
+    abbrev_groups <- split(my_abbreviations, rep(1:length(col_level_counts), col_level_counts))
+
+    # Apply abbreviations to each column safely
+    mapped_data <- as.data.frame(mapply(function(col, abbrev) {
+      factor(col, labels = abbrev)
+    }, treatment_data, abbrev_groups, SIMPLIFY = FALSE))
+
+    # Combine the abbreviated columns together without any separators
+    x$Treatment <- interaction(mapped_data, sep = "")
   }
-  x$Treatment <- as.factor(g)
+
   return(x)
-  }
 }
 
