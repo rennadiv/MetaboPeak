@@ -14,7 +14,7 @@ treatGroup(x, number.of.treatments, my_abbreviations)
 \item{my_abbreviations}{character vector of the abbreviations you want to use in alphabetical order (optional)}
 }
 \value{
-x with new column with the treatment code
+data frame containing all original columns of \code{x} with new column with the unique treatment code
 }
 \description{
 Based on the given abbreviation for the names of treatment, it makes an unique code for each treatment combination to which the sample is

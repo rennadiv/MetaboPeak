@@ -7,26 +7,30 @@
 peakInfo(x, n, ID)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".}
 
-\item{n}{number of samples}
+\item{n}{Numeric. The exact number of sample abundance columns present in the dataset.}
 
-\item{ID}{numeric (optional)}
+\item{ID}{Character or Numeric (optional). A specific peak identifier (from column 1) to retrieve data for.}
 }
 \value{
-A data frame with all the peak information for all or for one
+A clean data frame containing statistical summaries with maintained numeric data types.
 }
 \description{
-This function returns information about individual peaks within the whole data table (RT, m/z, % of NAs, Max intensity, Mean, SD and CV coefficient).
-If ID is provided, than it returns the same information, but for just this one peak.
+This function computes comprehensive descriptive statistics for mass spectrometry peaks
+across all sample columns (including Retention Time, m/z, percentage of NAs, maximum
+intensity, mean, standard deviation, and CV coefficient). Statistics can be returned
+for all peaks or filtered down to a single target peak identifier.
 }
 \details{
-The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
+The input abundance data values equal to 0 are internally transformed to \code{NA} to
+guarantee accurate calculation of true missingness, means, and variances.
 }
 \examples{
-z <- peakInfo(neg,48)
-z[1:5,]
+# Calculate statistics for all features assuming 48 samples
+# stats_summary <- peakInfo(neg, n = 48)
 
-peakInfo(neg,48,20)
+# Isolate data for specific peak ID "Peak_20"
+# single_peak <- peakInfo(neg, n = 48, ID = "Peak_20")
 
 }

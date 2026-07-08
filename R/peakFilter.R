@@ -27,9 +27,9 @@
 #' @returns A reduced data frame containing all original columns of \code{x}, filtered by the selected criteria.
 #'
 #' @examples
-#' # Example data setup assumed (neg dataset and t_info_group table)
-#' # peakFilter(neg, t_info_group, fNA = c('T', 0.5), fCV = FALSE, fRT = FALSE)
-#' # peakFilter(neg, t_info_group, fNA = c('T', 0.5), fCV = c('T', 0.4), fRT = FALSE)
+#' # Example data setup assumed (neg dataset and t_info table)
+#' # peakFilter(neg, t_info, fNA = c('T', 0.5), fCV = FALSE, fRT = FALSE)
+#' # peakFilter(neg, t_info, fNA = c('T', 0.5), fCV = c('T', 0.4), fRT = FALSE)
 #'
 #' @import dplyr
 #' @import matrixStats

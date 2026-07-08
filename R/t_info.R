@@ -2,7 +2,7 @@
 #'
 #'
 #'
-#' @format ## `t_info_group`
+#' @format ## `t_info`
 #' A data frame with 48 rows and 6 columns:
 #' \describe{
 #'   \item{Sample}{sample name (colnames in case of neg/pos data)}
@@ -14,4 +14,4 @@
 #'
 #' }
 #' @source Czech Globe, Global Change Research Institute CAS
-'t_info_group'
+'t_info'
