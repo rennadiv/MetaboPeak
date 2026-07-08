@@ -21,6 +21,9 @@
 #' @export
 
 highestAbund <- function(x, mass, n){
+
+  checkFormat(x,n)
+
   data <- x
   number.of.samples <- n
   n1 <- number.of.samples+1
