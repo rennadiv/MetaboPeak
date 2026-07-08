@@ -18,9 +18,9 @@
 #' @returns A string of the treatments code.
 #'
 #' @examples
-#' treatCases(neg,t_info_group,447.12851,5.252,48)
-#' treatCases(neg,t_info_group,447.12872,12.386,48)
-#' treatCases(neg,t_info_group,447.22214,13.226,48)
+#' treatCases(neg,t_info,447.12851,5.252,48)
+#' treatCases(neg,t_info,447.12872,12.386,48)
+#' treatCases(neg,t_info,447.22214,13.226,48)
 #'
 #' @export
 

@@ -4,54 +4,43 @@
 \alias{peakFilter}
 \title{Filter by NA, CV coefficient and/or correlated RT}
 \usage{
-peakFilter(x, y, fNA, fCV, fRT, parallel, n_cors)
+peakFilter(x, y, fNA, fCV, fRT, parallel, n_cores)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Format must be: Peak names/IDs in column 1, followed by sample abundance columns, "m.z", and "RT".}
 
-\item{y}{treatment info data table}
+\item{y}{Treatment mapping data frame. Column 1 must match the sample column names in \code{x}. Must contain a column named \code{Treatment}.}
 
-\item{fNA}{character vector}
+\item{fNA}{Vector. Either \code{FALSE} or a 2-element vector: \code{c('T', threshold_fraction)}. Default is \code{c('T', 0.5)}.}
 
-\item{fCV}{character vector}
+\item{fCV}{Vector. Either \code{FALSE} or a 2-element vector: \code{c('T', threshold_cv)}. Default is \code{c('T', 0.8)}.}
 
-\item{fRT}{character vector}
+\item{fRT}{Vector. Either \code{FALSE} or a 4-element vector: \code{c('T', rounding_digits, rt_window, correlation_threshold)}. Default is \code{c('T', 3, 0.02, 0.95)}.}
+
+\item{parallel}{Logical. Set to \code{TRUE} to check multiple retention time windows concurrently across multiple CPU cores. Default is \code{FALSE}.}
+
+\item{n_cores}{Numeric. Number of CPU cores to utilize. If \code{NULL}, defaults to available cores minus 1.}
 }
 \value{
-A reduced data frame.
+A reduced data frame containing all original columns of \code{x}, filtered by the selected criteria.
 }
 \description{
-This function provides 3 types of filters. It needs the abundances table, treatment info with combined treatment code under the column
-treatment (function treatGroup can be used to make this code) and some thresholds.
+This function provides 3 types of filters for metabolomics peak data. It utilizes an
+abundances table, sample-to-treatment mapping data, and customizable parameter thresholds.
 
-1) based on NA values: it calculates which peaks (rows) have more NAs than
-threshold and if there are no complete cases for any treatment group, than it removes those rows.
+1) Based on NA values: Removes peaks exceeding the missingness threshold, unless
+the peak has complete measurements (no NAs) in at least one treatment group.
 
-2) based on CV coefficient: it calculates which peaks (rows) have bigger CV coefficient than
-threshold and if there are no complete cases for any treatment group, than it removes those rows.
+2) Based on CV coefficient: Removes peaks with a Coefficient of Variation exceeding
+the threshold, unless the peak has complete measurements in at least one treatment group.
 
-3) based on correlated RT: it rounds the RT and orders them, than based on thresholds groups similar retention times and calculates correlation
-(spearman). From this correlated group it picks the one row with max m/z. (it might take some time)
-}
-\details{
-The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
-
-Treatment info must contain samples name, that corresponds with x in the 1. column and column treatment
-(code for combination of treatments, use [treatGroup()])
-
-fNA and fCV can be either defined as F/FALSE or with 2 argument vector ('T', threshold). fRT can be either defined as F/FALSE, or
-with 4 argument vector ('T', how many decimal places should RT be rounded, range value in which to look for similar RT, correlation
-threshold - how well should the rows be correlated to take them as the same)
-
-parallel can be either defined as F/FALSE or T/TRUE
-
-n_cores can be set as NULL and the computer will use number of available cores -1, or it can be set as any number that would work best for
-used computer.
+3) Based on correlated RT: Groups peaks with similar retention times (RT). Within each
+group, it constructs a network graph of pairs exceeding a Spearman correlation threshold.
+From each connected network component, it retains only the single peak with the maximum m/z value.
 }
 \examples{
-peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = F, fRT = F)
-peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = c('T', 0.4), fRT = F)
-peakFilter(neg, t_info_group, fNA = c('T',0.5), fCV = c('T', 0.4), fRT = c('T',3,0.2,0.95)
-
+# Example data setup assumed (neg dataset and t_info table)
+# peakFilter(neg, t_info, fNA = c('T', 0.5), fCV = FALSE, fRT = FALSE)
+# peakFilter(neg, t_info, fNA = c('T', 0.5), fCV = c('T', 0.4), fRT = FALSE)
 
 }

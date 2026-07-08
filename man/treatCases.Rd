@@ -30,8 +30,8 @@ The data frame y needs column named treatment which contains the code for all tr
 can be used). Also the first column should correspond to the names of samples in data frame x.
 }
 \examples{
-treatCases(neg,t_info_group,447.12851,5.252,48)
-treatCases(neg,t_info_group,447.12872,12.386,48)
-treatCases(neg,t_info_group,447.22214,13.226,48)
+treatCases(neg,t_info,447.12851,5.252,48)
+treatCases(neg,t_info,447.12872,12.386,48)
+treatCases(neg,t_info,447.22214,13.226,48)
 
 }
