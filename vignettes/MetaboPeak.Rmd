@@ -75,6 +75,35 @@ For more information about each data set use help:
 The example dataset included with the package has already been processed using `treatGroup()`, which makes and unique code for combination of treatments.
 When analyzing your own experiments, apply `treatGroup()` to your treatment table before using downstream functions.
 
+## Tracking Feature Completeness Across Experimental Groups
+
+In mass-spectrometry studies, determining whether a biomarker candidate is consistently expressed across your entire biological group cohort—or if it is compromised by zero markers and missing readings—is critical for rigorous classification. The package handles this evaluation with the `treatCases()` utility function.
+
+Rather than forcing complex manual row extraction loops, this function scans your abundance data within flexible numerical envelopes (`mz_tolerance` and `rt_tolerance`). It maps individual samples directly to their treatment groups, scans for structural missing values, and returns a clean character vector identifying only those specific treatment categories that achieve a 100% complete case record for that peak.
+
+```{r}
+# Discover which experimental groups have 100% complete data for a specific feature
+complete_cohorts <- treatCases(
+  x = neg, 
+  y = t_info, 
+  mass = 447.222, 
+  RT = 13.226, 
+  n = 48,
+  mz_tolerance = 0.01,
+  rt_tolerance = 0.05
+)
+
+# Convert the result vector into a single, clean sentence for reporting
+if (length(complete_cohorts) > 0) {
+  groups_sentence <- paste(complete_cohorts, collapse = ", ")
+  cat(paste("This feature is completely present in the following groups:", groups_sentence, ".\n"))
+} else {
+  cat("This feature does not have a 100% complete case profile in any group.\n")
+}
+
+```
+
+
 # Peak information
 
 Before filtering or performing downstream statistical evaluations, it is critical to understand the underlying distributions, signal variability, and missingness patterns within your metabolomics dataset.
@@ -294,34 +323,5 @@ print(paste("Maximum intensity observed in:", top_expressing_sample))
 ```
 
 
-# Complete cases in treatment check
 
-## Tracking Feature Completeness Across Experimental Groups
 
-In mass-spectrometry studies, determining whether a biomarker candidate is consistently expressed across your entire biological group cohort—or if it is compromised by zero markers and missing readings—is critical for rigorous classification. The package handles this evaluation with the `treatCases()` utility function.
-
-Rather than forcing complex manual row extraction loops, this function scans your abundance data within flexible numerical envelopes (`mz_tolerance` and `rt_tolerance`). It maps individual samples directly to their treatment groups, scans for structural missing values, and returns a clean character vector identifying only those specific treatment categories that achieve a 100% complete case record for that peak.
-
-```{r}
-# Discover which experimental groups have 100% complete data for a specific feature
-complete_cohorts <- treatCases(
-  x = neg, 
-  y = t_info, 
-  mass = 447.222, 
-  RT = 13.226, 
-  n = 48,
-  mz_tolerance = 0.01,
-  rt_tolerance = 0.05
-)
-
-# Convert the result vector into a single, clean sentence for reporting
-if (length(complete_cohorts) > 0) {
-  groups_sentence <- paste(complete_cohorts, collapse = ", ")
-  cat(paste("This feature is completely present in the following groups:", groups_sentence, ".\n"))
-} else {
-  cat("This feature does not have a 100% complete case profile in any group.\n")
-}
-
-```
-
-# Top sample selection
