@@ -1,6 +1,14 @@
 library(testthat)
 
-# Mock Mass-Spec Peak Frames
+# ==============================================================================
+# 1. SETUP SHARED MOCK DATA FOR THE TESTS
+# ==============================================================================
+# This setup creates 5 mock peak features across 4 samples:
+# - peak_id: Name of the peaks
+# - S1-S3: Samples with their abundances
+# - m.z: mass to charge ration
+# - RT: retention time
+
 mock_pos <- data.frame(
   peak_id = c("P1", "P2"),
   S1 = c(10, 500), S2 = c(20, 510), S3 = c(30, 520),
@@ -14,6 +22,10 @@ mock_neg <- data.frame(
   `m.z` = c(148.032, 398.110), RT = c(5.1, 11.9),
   stringsAsFactors = FALSE, check.names = FALSE
 )
+
+# ==============================================================================
+# 2. THE FORMAL TEST SUITE
+# ==============================================================================
 
 test_that("checkCorr correctly calculates correlation within a single dataset", {
   # P1 has values: 10, 20, 30. Perfect correlation with itself.
