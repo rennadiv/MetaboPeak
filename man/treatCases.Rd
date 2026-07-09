@@ -2,36 +2,38 @@
 % Please edit documentation in R/treatCases.R
 \name{treatCases}
 \alias{treatCases}
-\title{Treatments of specific peak in complete cases.}
+\title{Treatment groups with complete cases for a specific peak}
 \usage{
-treatCases(x, y, mass, RT, n)
+treatCases(x, y, mass, RT, n, mz_tolerance = 0.02, rt_tolerance = 0.1)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".}
 
-\item{y}{data frame - treatment info}
+\item{y}{Data frame. Treatment mapping table. Column 1 must match the sample column names in \code{x}. Must contain a column named \code{treatment}.}
 
-\item{mass}{peak mass (m/z)}
+\item{mass}{Numeric or Character. The target mass-to-charge ratio (m/z) value to search for.}
 
-\item{RT}{retention time}
+\item{RT}{Numeric. The target retention time (RT) value to search for.}
 
-\item{n}{number of samples}
+\item{n}{Numeric. The exact number of sample abundance columns present in the dataset.}
+
+\item{mz_tolerance}{Numeric. Mass tolerance window (in Da) around the target m/z. Default is \code{0.02}.}
+
+\item{rt_tolerance}{Numeric. Retention time window (in minutes) around the target RT. Default is \code{0.1}.}
 }
 \value{
-A string of the treatments code.
+A character vector containing the names of the treatment groups where the peak is fully observed.
 }
 \description{
-Based on m/z and RT this function will return treatments in which the complete cases are.
+Identifies which specific treatment groups have 100% complete data observations (zero missing
+values or zeroes) for a target peak specified by its mass (m/z) and retention time (RT).
 }
 \details{
-The format of the data frame x should be: Peak names|abundances of samples|m.z|RT|...
-
-The data frame y needs column named treatment which contains the code for all treatments together (for this function [treatGroup()]
-can be used). Also the first column should correspond to the names of samples in data frame x.
+If multiple features reside within the overlapping mass and retention time tolerance envelopes,
+the function isolates the single closest mathematical match to prevent output text crashes.
 }
 \examples{
-treatCases(neg,t_info,447.12851,5.252,48)
-treatCases(neg,t_info,447.12872,12.386,48)
-treatCases(neg,t_info,447.22214,13.226,48)
+# Find treatments where m/z 447.128 at RT 5.25 has complete cases
+# groups <- treatCases(neg, t_info, mass = 447.128, RT = 5.25, n = 48)
 
 }

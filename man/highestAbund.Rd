@@ -2,30 +2,33 @@
 % Please edit documentation in R/highestAbund.R
 \name{highestAbund}
 \alias{highestAbund}
-\title{Name of the sample in which m/z is highest.}
+\title{Find the sample name with the highest abundance for a given mass}
 \usage{
-highestAbund(x, mass, n)
+highestAbund(x, mass, n, tolerance = 0.02)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".}
 
-\item{mass}{peak mass (m/z)}
+\item{mass}{Numeric or Character. The target mass-to-charge ratio (m/z) value to search for.}
 
-\item{n}{number of samples}
+\item{n}{Numeric. The exact number of sample abundance columns present in the dataset.}
+
+\item{tolerance}{Numeric. Mass tolerance window (in Da) around the target m/z. Default is \code{0.02}.}
 }
 \value{
-A string of the sample name.
+A character string representing the name of the sample with the highest peak intensity.
 }
 \description{
-Given the mass (m/z) it looks for the highest value of abundance throughout the samples and returns name of the sample.
+Searches the dataset for a target mass-to-charge ratio (m/z) and identifies the specific
+sample column that contains the absolute highest abundance value for that feature.
 }
 \details{
-The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
-
-The mass should be put as a string.
+If multiple peaks are found within the specified mass tolerance window, the function
+scans all of them and extracts the sample name corresponding to the absolute maximum
+intensity across all matching rows, preventing unexpected function crashes.
 }
 \examples{
-highestAbund(neg,'593.12805',48)
-highestAbund(pos,'192.05482',48)
+# Find the sample where m/z 593.128 is most abundant
+# top_sample <- highestAbund(neg, mass = 593.128, n = 48)
 
 }

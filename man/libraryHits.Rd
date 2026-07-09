@@ -2,40 +2,33 @@
 % Please edit documentation in R/libraryHits.R
 \name{libraryHits}
 \alias{libraryHits}
-\title{Annotation peaks based on in house library}
+\title{Annotate peaks based on an in-house reference library}
 \usage{
-libraryHits(x, l, RT.range, mz.range, unique)
+libraryHits(x, l, RT.range = 0.25, mz.range = 0.009, unique = TRUE)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Experimental data. Format must be: Peak identifiers in column 1, followed by sample abundance columns, "m.z", and "RT".}
 
-\item{l}{library (data frame)}
+\item{l}{Data frame. Reference library. Format must be: Compound names/identifiers in column 1, "m.z", and "RT".}
 
-\item{RT.range}{numeric value determining the range of RT}
+\item{RT.range}{Numeric. Maximum allowable absolute retention time difference (in minutes) for a match. Default is \code{0.25}.}
 
-\item{mz.range}{numeric value determining the range of mz}
+\item{mz.range}{Numeric. Maximum allowable absolute mass-to-charge difference (in Da) for a match. Default is \code{0.009}.}
 
-\item{unique}{logical, if there should not be replicates with the same compound name}
+\item{unique}{Logical. If \code{TRUE}, when multiple experimental peaks match a single library compound, only the one closest in Retention Time is kept. Default is \code{TRUE}.}
 }
 \value{
-list of 3 objects (lib_small, lib_all and unique_name)
-
-* lib_small = data frame in the format: RT difference|Compound name|m.z|RT|abundances of just annotated samples
-
-* lib_all = data frame in the format: Compound name|x (all the samples, unknown = 'unknown')
-
-* unique_names = string vector of all the compound names, that have been annotated
+A named list containing 3 structured elements:
+\itemize{
+  \item \code{lib_small}: Data frame mapping successful hits, displaying time deviations, compound identities, library standards, and sample abundances.
+  \item \code{lib_all}: Data frame mirroring the entire input matrix structure \code{x}, with an added \code{Compound} identity column.
+  \item \code{unique_names}: Character vector listing all uniquely annotated compound assignments.
+}
 }
 \description{
-This function combines data frame with m/z and RT with given library.
-Based on the ranges of m/z and RT it tries to match m/z,RT of the library with the detected.
+Matches experimental mass-to-charge ratios (m/z) and retention times (RT) against a reference
+standard library using specified tolerance windows.
 }
 \details{
-The format of the data frame (x) should be: Peak names|abundances of samples|m.z|RT|...
-
-The format of the library: Compound names|m.z|RT|...
-}
-\examples{
-data_library <- libraryHits(neg, pkg_lib, RT.range = 0.25, mz.range = 0.009, unique = T)
-
+Elements that do not match any compound within the library parameters are cleanly categorized as \code{"unknown"}.
 }

@@ -2,30 +2,39 @@
 % Please edit documentation in R/barPeaks.R
 \name{barPeaks}
 \alias{barPeaks}
-\title{Barplots of 3 lowest variable peaks based on mass (m/z).}
+\title{Barplots of the 3 lowest variable peaks based on mass (m/z)}
 \usage{
-barPeaks(x, mass, n)
+barPeaks(x, mass, n, tolerance = 0.05)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".}
 
-\item{mass}{peak mass (m/z)}
+\item{mass}{Numeric or Character. The target mass-to-charge ratio (m/z) value to search for.}
 
-\item{n}{number of samples}
+\item{n}{Numeric. The exact number of sample abundance columns present in the dataset.}
+
+\item{tolerance}{Numeric. Mass tolerance window (in Da) around the target m/z. Default is \code{0.05}.}
 }
 \value{
-Bar plots of max 3 peaks with similar m/z and their RT and CV coefficient.
+A named list containing:
+\itemize{
+  \item \code{peak_names}: Character vector of the top selected peak IDs.
+  \item \code{mids}: List containing the bar midpoint coordinates from each barplot.
+  \item \code{CV}: Numeric vector of the calculated CV coefficients for the top peaks.
+  \item \code{data}: Data frame of the raw abundance values used for plotting.
+}
 }
 \description{
-The function calculates CV coefficient (SD/Mean) of each peak with the given mass (m/z)
-and plots abundances of all samples for the max 3 lowest CV coefficient.
+Calculates the Coefficient of Variation (CV) for all peaks matching a target mass
+within a specified tolerance window. It then displays side-by-side or stacked barplots
+showing sample abundance profiles for the up to 3 peaks with the lowest CV coefficients
+(i.e., the most stable, least variable features).
 }
 \details{
-The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
-
-The mass should be put as a string.
+Zero abundance values are treated as missing values (\code{NA}) to prevent data skewing
+during mean and variance calculations.
 }
 \examples{
-barPeaks(neg, '355.10', 48)
+# barPeaks(neg, '355.10', 48)
 
 }
