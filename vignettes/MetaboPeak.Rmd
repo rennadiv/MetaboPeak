@@ -254,6 +254,28 @@ This generates a publication-ready line graphic overlaying both peak trends, aut
 
 # Background noise variability check
 
+## Visualizing Feature Stability via Variance Barplots
+
+When picking biomarker candidates or doing quality control checks on target compound groups, it is incredibly informative to see how feature abundances are distributed across your sample cohort. Features with ultra-low variance are typically highly dependable signals. The package offers an express plotting function called `barPeaks()` to automatically discover and plot the most stable signals tracking near a target mass window.
+
+The function screens all records matching your query within a custom Daltons window (`tolerance`), calculates their Coefficients of Variation (CV), and selects up to 3 features exhibiting the lowest relative variance. It then stacks their absolute abundance trends into a clean multi-panel graphic for quick evaluation.
+
+```{r}
+# Find and plot profiles for the 3 most stable peaks around m/z 355.10
+stable_features <- barPeaks(
+  x = neg, 
+  mass = 355.10, 
+  n = 48, 
+  tolerance = 0.02
+)
+
+# Inspect returning data summaries
+print(stable_features$peak_names)
+```
+
+The function returns a useful descriptive payload containing the extracted raw sample arrays, individual CV metrics, and the precise bar mid-point configurations, while dynamically safeguarding your default plotting console dimensions.
+
+
 # Complete cases in treatment check
 
 # Top sample selection

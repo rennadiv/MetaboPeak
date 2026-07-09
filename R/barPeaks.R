@@ -1,94 +1,120 @@
-#' @title Barplots of 3 lowest variable peaks based on mass (m/z).
-#' @description
-#' The function calculates CV coefficient (SD/Mean) of each peak with the given mass (m/z)
-#' and plots abundances of all samples for the max 3 lowest CV coefficient.
+#' @title Barplots of the 3 lowest variable peaks based on mass (m/z)
 #'
-#' @usage barPeaks(x, mass, n)
-#' @param x data frame
-#' @param mass peak mass (m/z)
-#' @param n number of samples
+#' @description
+#' Calculates the Coefficient of Variation (CV) for all peaks matching a target mass
+#' within a specified tolerance window. It then displays side-by-side or stacked barplots
+#' showing sample abundance profiles for the up to 3 peaks with the lowest CV coefficients
+#' (i.e., the most stable, least variable features).
+#'
+#' @usage barPeaks(x, mass, n, tolerance = 0.05)
+#'
+#' @param x Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".
+#' @param mass Numeric or Character. The target mass-to-charge ratio (m/z) value to search for.
+#' @param n Numeric. The exact number of sample abundance columns present in the dataset.
+#' @param tolerance Numeric. Mass tolerance window (in Da) around the target m/z. Default is \code{0.05}.
 #'
 #' @details
-#' The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+#' Zero abundance values are treated as missing values (\code{NA}) to prevent data skewing
+#' during mean and variance calculations.
 #'
-#' The mass should be put as a string.
-#'
-#' @returns Bar plots of max 3 peaks with similar m/z and their RT and CV coefficient.
+#' @returns A named list containing:
+#' \itemize{
+#'   \item \code{peak_names}: Character vector of the top selected peak IDs.
+#'   \item \code{mids}: List containing the bar midpoint coordinates from each barplot.
+#'   \item \code{CV}: Numeric vector of the calculated CV coefficients for the top peaks.
+#'   \item \code{data}: Data frame of the raw abundance values used for plotting.
+#' }
 #'
 #' @examples
-#' barPeaks(neg, '355.10', 48)
+#' # barPeaks(neg, '355.10', 48)
 #'
-#' @importFrom graphics barplot
-#' @importFrom graphics par
-#' @importFrom stats complete.cases
-#' @importFrom stats sd
+#' @importFrom graphics barplot par
+#' @importFrom matrixStats rowMeans2 rowSds
 #'
 #' @export
 
 
-barPeaks <- function(x, mass, n){
+barPeaks <- function(x, mass, n, tolerance = 0.05) {
 
-  # ---- checks ----
+  # ---- 1. CORE ACCELERATION & VALUE CHECKS ----
   if (!is.data.frame(x)) {
-    stop("Input x must be a data.frame")
+    stop("Input parameter 'x' must be a structured data.frame.")
   }
-
   if (!is.numeric(n) || length(n) != 1) {
-    stop("n must be a single number (number of samples)")
+    stop("Parameter 'n' must be a single numeric value representing total samples.")
+  }
+  if (!requireNamespace("matrixStats", quietly = TRUE)) {
+    stop("Please install the 'matrixStats' package to run this optimized function.")
   }
 
-  # ---- data prep ----
-  number.of.samples <- n
-  data <- x
-  n3 <- number.of.samples + 3
+  # ---- 2. DYNAMIC LAYOUT MANAGEMENT ----
+  # Capture user's active graphical environment settings
+  old_par <- graphics::par(no.readonly = TRUE)
+  # Automatically reset layouts back to the original state upon function termination
+  on.exit(graphics::par(old_par), add = TRUE)
 
-  a <- data[substr(data$m.z, 1, nchar(mass)) == mass, c(2:n3)]
+  # ---- 3. TARGET FEATURE FILTERING ----
+  target_mass <- as.numeric(mass)
+  sample_cols <- 2:(n + 1)
 
-  if (nrow(a) == 0) {
-    stop("This mass is not in the data frame.")
+  # Filter rows falling cleanly within the target mass tolerance envelope
+  matched_rows <- x[abs(x$m.z - target_mass) <= tolerance, , drop = FALSE]
+
+  if (nrow(matched_rows) == 0) {
+    stop(paste("No peaks were found matching mass ", target_mass, " within a tolerance of ", tolerance, " Da.", sep = ""))
   }
 
-  aa <- a[, -c(number.of.samples+1, number.of.samples+2)]
+  # Separate raw abundance dimensions
+  abundance_mat <- as.matrix(matched_rows[, sample_cols, drop = FALSE])
+  abundance_mat[abundance_mat == 0] <- NA
 
-  Mean <- rowMeans(aa, na.rm = TRUE)
-  SD <- apply(aa, 1, sd, na.rm = TRUE)
-  CV <- SD / Mean
+  # ---- 4. SPEED-OPTIMIZED METRIC CALCULATIONS ----
+  Mean <- matrixStats::rowMeans2(abundance_mat, na.rm = TRUE)
+  SD   <- matrixStats::rowSds(abundance_mat, na.rm = TRUE)
+  CV   <- SD / Mean
 
-  # ---- select top peaks ----
+  # Handle instances where a completely empty peak yields NaN metrics
+  CV[is.nan(CV)] <- Inf
+
+  # Sort ascending to discover the absolute lowest variance peaks
   ord <- order(CV)
-  top_idx <- ord[1:min(3, length(ord))]
+  keep_count <- min(3, length(ord))
+  top_idx <- ord[1:keep_count]
 
-  a_top <- a[top_idx, ]
-  aa_top <- aa[top_idx, ]
-  CV_top <- CV[top_idx]
+  # Isolate selected plotting elements
+  final_rows <- matched_rows[top_idx, , drop = FALSE]
+  final_mat  <- abundance_mat[top_idx, , drop = FALSE]
+  final_cv   <- CV[top_idx]
+  final_ids  <- as.character(final_rows[, 1])
 
-  peak_names <- toy_df[ord,1]
-
-  # ---- plotting ----
-  par(mfrow = c(nrow(a_top), 1))
+  # ---- 5. HIGH-VISIBILITY PLOTTING INTERFACE ----
+  # Set layout matrix based dynamically on total matching records found (max 3)
+  graphics::par(mfrow = c(keep_count, 1), mar = c(3, 4, 3, 2) + 0.1)
 
   mids_list <- list()
 
-  for (i in seq_len(nrow(a_top))) {
-
-    mids <- barplot(
-      as.matrix(aa_top[i, ]),
-      main = paste(
-        "m/z =", round(a_top[i, number.of.samples+1], 3),
-        ", RT =", round(a_top[i, number.of.samples+2], 2),
-        ", CV =", round(CV_top[i], 3)
-      ),
-      names.arg = rep("", n),
-      col = "navy"
+  for (i in seq_len(keep_count)) {
+    # Generate clean bar chart distributions
+    mids <- graphics::barplot(
+      height   = final_mat[i, ],
+      main     = paste("ID: ", final_ids[i],
+                       " | m/z =", round(final_rows$m.z[i], 4),
+                       " | RT =", round(final_rows$RT[i], 2),
+                       " | CV =", round(final_cv[i], 3)),
+      col      = "#1f77b4",
+      border   = "white",
+      las      = 1,
+      names.arg = colnames(final_mat)
     )
 
     mids_list[[i]] <- mids
   }
 
+  # ---- 6. COMPACT PAYLOAD RETURN ----
   return(list(
-    peak_names = peak_names,
-    mids = mids_list,
-    CV = CV_top,
-    data = aa_top
+    peak_names = final_ids,
+    mids       = mids_list,
+    CV         = final_cv,
+    data       = as.data.frame(final_mat)
   ))
 }
