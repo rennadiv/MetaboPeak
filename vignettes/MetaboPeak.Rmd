@@ -77,9 +77,11 @@ When analyzing your own experiments, apply `treatGroup()` to your treatment tabl
 
 ## Tracking Feature Completeness Across Experimental Groups
 
-In mass-spectrometry studies, determining whether a biomarker candidate is consistently expressed across your entire biological group cohort—or if it is compromised by zero markers and missing readings—is critical for rigorous classification. The package handles this evaluation with the `treatCases()` utility function.
+In mass-spectrometry studies, determining whether a biomarker candidate is consistently expressed across your entire biological group cohort—or if it is compromised by zero markers and missing readings—is critical for rigorous classification.
+The package handles this evaluation with the `treatCases()` utility function.
 
-Rather than forcing complex manual row extraction loops, this function scans your abundance data within flexible numerical envelopes (`mz_tolerance` and `rt_tolerance`). It maps individual samples directly to their treatment groups, scans for structural missing values, and returns a clean character vector identifying only those specific treatment categories that achieve a 100% complete case record for that peak.
+Rather than forcing complex manual row extraction loops, this function scans your abundance data within flexible numerical envelopes (`mz_tolerance` and `rt_tolerance`).
+It maps individual samples directly to their treatment groups, scans for structural missing values, and returns a clean character vector identifying only those specific treatment categories that achieve a 100% complete case record for that peak.
 
 ```{r}
 # Discover which experimental groups have 100% complete data for a specific feature
@@ -102,7 +104,6 @@ if (length(complete_cohorts) > 0) {
 }
 
 ```
-
 
 # Peak information
 
@@ -285,9 +286,12 @@ This generates a publication-ready line graphic overlaying both peak trends, aut
 
 ## Visualizing Feature Stability via Variance Barplots
 
-When picking biomarker candidates or doing quality control checks on target compound groups, it is incredibly informative to see how feature abundances are distributed across your sample cohort. Features with ultra-low variance are typically highly dependable signals. The package offers an express plotting function called `barPeaks()` to automatically discover and plot the most stable signals tracking near a target mass window.
+When picking biomarker candidates or doing quality control checks on target compound groups, it is incredibly informative to see how feature abundances are distributed across your sample cohort.
+Features with ultra-low variance are typically highly dependable signals.
+The package offers an express plotting function called `barPeaks()` to automatically discover and plot the most stable signals tracking near a target mass window.
 
-The function screens all records matching your query within a custom Daltons window (`tolerance`), calculates their Coefficients of Variation (CV), and selects up to 3 features exhibiting the lowest relative variance. It then stacks their absolute abundance trends into a clean multi-panel graphic for quick evaluation.
+The function screens all records matching your query within a custom Daltons window (`tolerance`), calculates their Coefficients of Variation (CV), and selects up to 3 features exhibiting the lowest relative variance.
+It then stacks their absolute abundance trends into a clean multi-panel graphic for quick evaluation.
 
 ```{r}
 # Find and plot profiles for the 3 most stable peaks around m/z 355.10
@@ -306,9 +310,12 @@ The function returns a useful descriptive payload containing the extracted raw s
 
 ## Tracking Maximal Feature Abundance
 
-When analyzing profiling runs, it is often critical to find which specific biological sample or treatment condition expresses a compound at its absolute highest intensity. This is particularly useful for identifying sample outliers, discovering positive control behaviors, or tracking down which sample to use for downstream targeted fragmentation (MS/MS) experiments. The package provides a direct query tool called `highestAbund()`.
+When analyzing profiling runs, it is often critical to find which specific biological sample or treatment condition expresses a compound at its absolute highest intensity.
+This is particularly useful for identifying sample outliers, discovering positive control behaviors, or tracking down which sample to use for downstream targeted fragmentation (MS/MS) experiments.
+The package provides a direct query tool called `highestAbund()`.
 
-Instead of forcing you to subset your arrays manually, the function scans the peak matrix within a reliable mass tolerance window (`tolerance`). If multiple chromatographic features share that mass space, it searches across all of them simultaneously to isolate the single highest intensity coordinates and returns the exact text name of the sample it belongs to.
+Instead of forcing you to subset your arrays manually, the function scans the peak matrix within a reliable mass tolerance window (`tolerance`).
+If multiple chromatographic features share that mass space, it searches across all of them simultaneously to isolate the single highest intensity coordinates and returns the exact text name of the sample it belongs to.
 
 ```{r}
 # Find which sample column contains the highest intensity for mass 593.128
@@ -322,6 +329,45 @@ top_expressing_sample <- highestAbund(
 print(paste("Maximum intensity observed in:", top_expressing_sample))
 ```
 
+# Working with library
 
+## Annotating Experimental Features Against Standard Reference Libraries
 
+Once structural peak reduction filters are complete, identifying candidate compound annotations by referencing data against an in-house database or a target chemical library is standard practice.
+The package achieves this using the `libraryHits()` database exploration engine.
 
+The function maps your experimental mass peaks (`m.z`) and chromatography timelines (`RT`) directly against standard standard entries within customizable accuracy parameters (`mz.range` and `RT.range`).
+If structural duplication issues surface (where one reference target captures multiple near experimental peaks), an automated proximity step (`unique = TRUE`) filters down to keep only the absolute closest match.
+All other unassigned peaks are marked as `"unknown"`.
+
+```{r}
+# Match raw screen records against a validated database data frame
+annotation_payload <- libraryHits(
+  x = neg, 
+  l = pkg_lib, 
+  RT.range = 0.20, 
+  mz.range = 0.005, 
+  unique = TRUE
+)
+
+# Extract total count of unique identities matched
+annotated_count <- length(annotation_payload$unique_names)
+
+# Convert the tracking result into a clean summary sentence
+if (annotated_count > 0) {
+  cat(paste("Library matching complete: successfully assigned identity tags to", annotated_count, "metabolite compounds.\n"))
+} else {
+  cat("Library search finished: no peaks matched the standard library criteria.\n")
+}
+```
+
+### Structure of the Returned List Object
+
+The `libraryHits()` function returns a named list with a length of 3.
+Below is the technical data schema of the output object:
+
+- **`List Element 1: lib_small`** (Data Frame) Clean annotation report showing only successful assignments and their retention time drift (`RTdiff`).
+
+- **`List Element 2: lib_all`** (Data Frame) Matrix mirroring your entire input dataset, perfect for passing directly into downstream statistical tests.
+
+- **`List Element 3: unique_names`** (Character Vector) A simple list of found metabolites, ideal for pathway enrichment analysis or clean text reporting.
