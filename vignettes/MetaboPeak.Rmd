@@ -209,8 +209,6 @@ Manually querying individual peak relationships can become an exhausting task ov
 
 This function can run internally on a single dataset to uncover candidate isotope clusters or in-source fragments, or scan cross-mode datasets (comparing positive and negative screens) to find matched molecular ion partners.
 
-### Example with two datasets:
-
 ```{r}
 # Scan for related features co-eluting within 0.04 minutes sharing a correlation >= 0.90
 highly_linked_features <- findCorrelatedPairs(
@@ -226,6 +224,26 @@ head(highly_linked_features)
 ```
 
 The output yields an ordered, high-utility matrix documenting the identity codes, respective mass coordinates, specific retention run times, exact absolute chromatographic time splits (`RT_Diff`), and calculated Spearman scores sorted from strongest relationship downwards.
+
+## Visualizing Feature Co-Elution Profiles
+
+Once you have identified interesting candidate pairs using `findCorrelatedPairs()`, it is highly recommended to visually inspect their abundance tracking patterns across your sample cohort. This helps rule out false positives driven by localized sample artifacts.
+
+The package provides a 1-line plotting tool called `plotPeakCorrelation()`. It extracts the target feature arrays, normalizes their intensity profiles (allowing you to cleanly compare a high-abundance parent ion with a low-abundance isotope or fragment side-by-side), and draws their trends across all samples.
+
+```{r}
+# Plot the alignment profile of a discovered high-correlation peak pair
+plotPeakCorrelation(
+  x = pos, 
+  y = neg, 
+  peak_id_x = "941", 
+  peak_id_y = "2063", 
+  n = 48
+)
+```
+
+This generates a publication-ready line graphic overlaying both peak trends, automatically calculating and engraving the active Spearman correlation score, mass coordinates, and elution times straight onto the figure canvas header.
+
 
 # Background noise variability check
 

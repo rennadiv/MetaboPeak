@@ -15,6 +15,10 @@
 #'
 #' @returns A data frame sorted by correlation strength, showing the IDs, m/z values, RT values, RT differences, and correlation scores of matching pairs.
 #'
+#' @examples
+#' # findCorrelatedPairs(x = pos, y = neg, n = 48, rt_window = 0.04, cor_threshold = 0.90)
+#' # findCorrelatedPairs(x = pos, n = 48, rt_window = 0.04, cor_threshold = 0.90)
+#'
 #' @importFrom stats cor
 #' @export
 
