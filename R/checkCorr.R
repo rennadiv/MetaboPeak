@@ -1,70 +1,94 @@
-#' @title Correlation of two peaks in the same retention time.
-#' @description
-#' This function gives spearman correlation coefficient of two peaks, defined by their mass (m/z).
-#' They can be from the same data frame, or two different data frames. The combining factor is their retention time (RT).
+#' @title Correlation of two peaks at the same retention time
 #'
-#' @usage checkCorr(x, y = NULL, masses, RT, n)
-#' @param x data frame
-#' @param y NULL (default) or a data frame with compatible dimensions to x. The default is equivalent to y = x
-#' @param masses vector of peak masses
-#' @param RT retention time
-#' @param n number of samples
+#' @description
+#' Calculates the Spearman correlation coefficient between two specific peaks defined by their
+#' mass-to-charge ratio (m/z) and target Retention Time (RT). The peaks can be queried from
+#' a single dataset or across two different datasets (e.g., matching positive and negative ion modes).
+#'
+#' @usage checkCorr(x, y = NULL, masses, RT, n, tolerance = 0.05)
+#'
+#' @param x Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".
+#' @param y Data frame (optional). A second data frame with compatible dimensions to \code{x}. If \code{NULL}, defaults to \code{y = x}.
+#' @param masses Numeric vector of length 2 containing the target m/z values to compare \code{c(mass1, mass2)}.
+#' @param RT Numeric. The target retention time around which to search for the peaks.
+#' @param n Numeric. The exact number of sample abundance columns present in the dataset(s).
+#' @param tolerance Numeric. Mass tolerance window (in Da) used to search for the closest m/z match. Default is \code{0.05}.
 #'
 #' @details
-#' The format of the data frame (x,y) should be: Peak names|abundances of samples|m.z|RT|...
+#' The function locates the closest peak matching \code{masses[1]} in dataset \code{x} and \code{masses[2]}
+#' in dataset \code{y} within the specified mass tolerance. If multiple matching peaks are found, it isolates
+#' the single feature closest to the target retention time (\code{RT}). Missing values are handled using
+#' pairwise complete observations.
 #'
-#' The masses can be either written as numeric (rounded) or as character (not rounded).
-#'
-#' The correlation is computed by spearman coefficient and if there are missing values than the correlation between each pair of variables is computed using all complete pairs of observations on those variables.
-#'
-#' @returns Correlation of the two peaks.
+#' @returns A numeric value indicating the Spearman correlation coefficient between the two target peaks.
 #'
 #' @examples
-#' checkCorr(pos, masses = c(595.2, 449.08), RT = 11.8, n= 48)
-#' checkCorr(pos, neg, masses = c(595.2, 593.15), RT = 11.8, n= 48)
+#' # Check correlation within the same dataset
+#' # checkCorr(pos, masses = c(595.2, 449.08), RT = 11.8, n = 48)
+#'
+#' # Check cross-mode correlation between positive and negative datasets
+#' # checkCorr(pos, neg, masses = c(595.2, 593.15), RT = 11.8, n = 48)
 #'
 #' @importFrom stats cor
 #' @export
-#'
+checkCorr <- function(x, y = NULL, masses, RT, n, tolerance = 0.05) {
 
-checkCorr <- function(x, y = NULL, masses, RT, n){
-  n1 <- n+1
-  data <- x
-  if (!is.null(y)){
-    data2 <- y
-  } else {
-    data2 <- x
+  # Set default data mapping behavior if y is omitted
+  if (is.null(y)) {
+    y <- x
   }
+
+  # Identify target abundance coordinates
+  sample_cols <- 2:(n + 1)
   mass1 <- masses[1]
   mass2 <- masses[2]
-  decimalplaces <- function(x) {
-    if ((x %% 1) != 0) {
-      nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
-    } else {
-      return(0)
-    }
+
+  # ----------------------------------------------------------------------------
+  # 1. PROCESS FIRST PEAK (Dataset X)
+  # ----------------------------------------------------------------------------
+  # Find all peaks within the mass tolerance window
+  matches_x <- x[abs(x$m.z - mass1) <= tolerance, , drop = FALSE]
+
+  if (nrow(matches_x) == 0) {
+    stop(paste("The first mass (", mass1, ") was not found within a tolerance of ", tolerance, " Da.", sep = ""))
   }
-  f <- decimalplaces(as.numeric(mass1))
-  g <- decimalplaces(as.numeric(mass2))
 
-  df1 <- data[which(round(data$m.z,f) == mass1), c(2:n1,n1+1,n1+2)]
-  df1 <- df1[which.min(abs(df1$RT - RT)), c(1:n)]
+  # From matches, isolate the one closest to the target Retention Time
+  best_row_x <- matches_x[which.min(abs(matches_x$RT - RT)), , drop = FALSE]
 
-  df2 <- data2[which(round(data2$m.z,g) == mass2), c(2:n1,n1+1, n1+2)]
-  df2 <- df2[which.min(abs(df1$RT - RT)), c(1:n)]
+  # Extract the abundance values as a clean numeric vector
+  vec1 <- as.numeric(best_row_x[, sample_cols])
 
-  if (nrow(df1) == 0) {
-    stop('First mass is not in the data table')
-  } else if (nrow(df2) == 0) {
-    stop('Second mass is not in the data table')
-  } else {
-    c1 <- as.vector(t(df1))
-    c2 <- as.vector(t(df2))
-    if (sum(is.na(c1)) > 0 | sum(is.na(c2)) > 0){
-      out <- cor(c1,c2,method = 'spearman', use = 'pairwise.complete.obs')
-    } else {
-      out <- cor(c1, c2, method = 'spearman')
-    }
+  # ----------------------------------------------------------------------------
+  # 2. PROCESS SECOND PEAK (Dataset Y)
+  # ----------------------------------------------------------------------------
+  # Find all peaks within the mass tolerance window
+  matches_y <- y[abs(y$m.z - mass2) <= tolerance, , drop = FALSE]
+
+  if (nrow(matches_y) == 0) {
+    stop(paste("The second mass (", mass2, ") was not found within a tolerance of ", tolerance, " Da.", sep = ""))
   }
-  return(out)
+
+  # Fix the original typo: Evaluate against matches_y$RT, not x!
+  best_row_y <- matches_y[which.min(abs(matches_y$RT - RT)), , drop = FALSE]
+
+  # Extract the abundance values as a clean numeric vector
+  vec2 <- as.numeric(best_row_y[, sample_cols])
+
+  # ----------------------------------------------------------------------------
+  # 3. COMPUTE SPEARMAN CORRELATION
+  # ----------------------------------------------------------------------------
+  # Replace legacy 0 markers with NA to handle missing pairs elegantly
+  vec1[vec1 == 0] <- NA
+  vec2[vec2 == 0] <- NA
+
+  # Compute the correlation coefficient
+  out_corr <- stats::cor(
+    x = vec1,
+    y = vec2,
+    method = 'spearman',
+    use = 'pairwise.complete.obs'
+  )
+
+  return(out_corr)
 }
