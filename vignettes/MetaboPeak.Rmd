@@ -77,11 +77,13 @@ When analyzing your own experiments, apply `treatGroup()` to your treatment tabl
 
 # Peak information
 
-Before filtering or performing downstream statistical evaluations, it is critical to understand the underlying distributions, signal variability, and missingness patterns within your metabolomics dataset. The package provides a quick diagnostics tool named `peakInfo()` to generate structural profiles for your data features.
+Before filtering or performing downstream statistical evaluations, it is critical to understand the underlying distributions, signal variability, and missingness patterns within your metabolomics dataset.
+The package provides a quick diagnostics tool named `peakInfo()` to generate structural profiles for your data features.
 
 ## Summarizing All Peaks
 
-The function isolates your abundance values from trailing structural variables (like Mass-to-Charge Ratio and Retention Time) using the sample total count parameter (`n`). It treats legacy zero markers as missing observation values (`NA`), computes fast matrix statistics, and outputs a complete, mathematically structured data frame.
+The function isolates your abundance values from trailing structural variables (like Mass-to-Charge Ratio and Retention Time) using the sample total count parameter (`n`).
+It treats legacy zero markers as missing observation values (`NA`), computes fast matrix statistics, and outputs a complete, mathematically structured data frame.
 
 ```{r}
 # Compute dataset profile statistics across 48 samples
@@ -91,11 +93,10 @@ dataset_profile <- peakInfo(neg, n = 48)
 head(dataset_profile, 5)
 ```
 
-The returned dataset appends descriptive data tracks for each peak, including:
-* **pctNAs**: The ratio of structural missing values relative to total sampling depth.
-* **Max**: Absolute peak ceiling intensity across standard groups.
-* **Mean & SD**: Rounding-controlled statistical center and variation points.
-* **CV**: The relative standard deviation metric (\(SD / Mean\)) indicating feature reliability.
+The returned dataset appends descriptive data tracks for each peak, including: \* **pctNAs**: The ratio of structural missing values relative to total sampling depth.
+\* **Max**: Absolute peak ceiling intensity across standard groups.
+\* **Mean & SD**: Rounding-controlled statistical center and variation points.
+\* **CV**: The relative standard deviation metric ($SD / Mean$) indicating feature reliability.
 
 ## Inspecting an Individual Feature
 
@@ -172,9 +173,11 @@ dim(filtered_neg)
 
 ## Investigating Feature Relationships with Peak Correlation
 
-During mass-spectrometry preprocessing, tracking specific feature relationships—such as looking for matching adducts, in-source fragments, or verifying cross-mode alignments between positive and negative ionization datasets—is a common workflow step. The package provides a quick exploration utility called `checkCorr()` to evaluate whether two features share a synchronized chromatographic elution profile.
+During mass-spectrometry preprocessing, tracking specific feature relationships—such as looking for matching adducts, in-source fragments, or verifying cross-mode alignments between positive and negative ionization datasets—is a common workflow step.
+The package provides a quick exploration utility called `checkCorr()` to evaluate whether two features share a synchronized chromatographic elution profile.
 
-The function maps targeted Mass-to-Charge Ratio (`m.z`) targets within an explicit mass tolerance window (defaulting to `0.05` Da). If multiple isobaric peaks match the profile window, the algorithm isolates the single feature tracking closest to your target Retention Time (`RT`), computes a profile correlation across all sample layers, and handles missing observations smoothly using complete pairwise steps.
+The function maps targeted Mass-to-Charge Ratio (`m.z`) targets within an explicit mass tolerance window (defaulting to `0.05` Da).
+If multiple isobaric peaks match the profile window, the algorithm isolates the single feature tracking closest to your target Retention Time (`RT`), computes a profile correlation across all sample layers, and handles missing observations smoothly using complete pairwise steps.
 
 ### Example: Verifying Cross-Mode Co-Elution
 
@@ -203,9 +206,12 @@ correlation_score <- checkCorr(
 print(paste("Feature Profile Correlation:", round(correlation_score, 3)))
 
 ```
+
 ## Automated Co-Elution Screening Across Datasets
 
-Manually querying individual peak relationships can become an exhausting task over massive metabolomics datasets. To simplify discovery workflows, the package introduces an automated tracking screening engine called `findCorrelatedPairs()`. This function parses your peak tables, builds structural sliding retention time matrices, and isolates features that share both a tight Retention Time proximity (`rt_window`) and a highly synchronized intensity pattern across your samples.
+Manually querying individual peak relationships can become an exhausting task over massive metabolomics datasets.
+To simplify discovery workflows, the package introduces an automated tracking screening engine called `findCorrelatedPairs()`.
+This function parses your peak tables, builds structural sliding retention time matrices, and isolates features that share both a tight Retention Time proximity (`rt_window`) and a highly synchronized intensity pattern across your samples.
 
 This function can run internally on a single dataset to uncover candidate isotope clusters or in-source fragments, or scan cross-mode datasets (comparing positive and negative screens) to find matched molecular ion partners.
 
@@ -227,9 +233,11 @@ The output yields an ordered, high-utility matrix documenting the identity codes
 
 ## Visualizing Feature Co-Elution Profiles
 
-Once you have identified interesting candidate pairs using `findCorrelatedPairs()`, it is highly recommended to visually inspect their abundance tracking patterns across your sample cohort. This helps rule out false positives driven by localized sample artifacts.
+Once you have identified interesting candidate pairs using `findCorrelatedPairs()`, it is highly recommended to visually inspect their abundance tracking patterns across your sample cohort.
+This helps rule out false positives driven by localized sample artifacts.
 
-The package provides a 1-line plotting tool called `plotPeakCorrelation()`. It extracts the target feature arrays, normalizes their intensity profiles (allowing you to cleanly compare a high-abundance parent ion with a low-abundance isotope or fragment side-by-side), and draws their trends across all samples.
+The package provides a 1-line plotting tool called `plotPeakCorrelation()`.
+It extracts the target feature arrays, normalizes their intensity profiles (allowing you to cleanly compare a high-abundance parent ion with a low-abundance isotope or fragment side-by-side), and draws their trends across all samples.
 
 ```{r}
 # Plot the alignment profile of a discovered high-correlation peak pair
@@ -244,9 +252,8 @@ plotPeakCorrelation(
 
 This generates a publication-ready line graphic overlaying both peak trends, automatically calculating and engraving the active Spearman correlation score, mass coordinates, and elution times straight onto the figure canvas header.
 
-
 # Background noise variability check
 
-## Complete cases in treatment check
+# Complete cases in treatment check
 
-## Top sample selection
+# Top sample selection

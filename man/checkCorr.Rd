@@ -2,37 +2,42 @@
 % Please edit documentation in R/checkCorr.R
 \name{checkCorr}
 \alias{checkCorr}
-\title{Correlation of two peaks in the same retention time.}
+\title{Correlation of two peaks at the same retention time}
 \usage{
-checkCorr(x, y = NULL, masses, RT, n)
+checkCorr(x, y = NULL, masses, RT, n, tolerance = 0.05)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{Data frame. Format must be: Peak identifiers in column 1, followed by \code{n} sample columns, "m.z", and "RT".}
 
-\item{y}{NULL (default) or a data frame with compatible dimensions to x. The default is equivalent to y = x}
+\item{y}{Data frame (optional). A second data frame with compatible dimensions to \code{x}. If \code{NULL}, defaults to \code{y = x}.}
 
-\item{masses}{vector of peak masses}
+\item{masses}{Numeric vector of length 2 containing the target m/z values to compare \code{c(mass1, mass2)}.}
 
-\item{RT}{retention time}
+\item{RT}{Numeric. The target retention time around which to search for the peaks.}
 
-\item{n}{number of samples}
+\item{n}{Numeric. The exact number of sample abundance columns present in the dataset(s).}
+
+\item{tolerance}{Numeric. Mass tolerance window (in Da) used to search for the closest m/z match. Default is \code{0.05}.}
 }
 \value{
-Correlation of the two peaks.
+A numeric value indicating the Spearman correlation coefficient between the two target peaks.
 }
 \description{
-This function gives spearman correlation coefficient of two peaks, defined by their mass (m/z).
-They can be from the same data frame, or two different data frames. The combining factor is their retention time (RT).
+Calculates the Spearman correlation coefficient between two specific peaks defined by their
+mass-to-charge ratio (m/z) and target Retention Time (RT). The peaks can be queried from
+a single dataset or across two different datasets (e.g., matching positive and negative ion modes).
 }
 \details{
-The format of the data frame (x,y) should be: Peak names|abundances of samples|m.z|RT|...
-
-The masses can be either written as numeric (rounded) or as character (not rounded).
-
-The correlation is computed by spearman coefficient and if there are missing values than the correlation between each pair of variables is computed using all complete pairs of observations on those variables.
+The function locates the closest peak matching \code{masses[1]} in dataset \code{x} and \code{masses[2]}
+in dataset \code{y} within the specified mass tolerance. If multiple matching peaks are found, it isolates
+the single feature closest to the target retention time (\code{RT}). Missing values are handled using
+pairwise complete observations.
 }
 \examples{
-checkCorr(pos, masses = c(595.2, 449.08), RT = 11.8, n= 48)
-checkCorr(pos, neg, masses = c(595.2, 593.15), RT = 11.8, n= 48)
+# Check correlation within the same dataset
+# checkCorr(pos, masses = c(595.2, 449.08), RT = 11.8, n = 48)
+
+# Check cross-mode correlation between positive and negative datasets
+# checkCorr(pos, neg, masses = c(595.2, 593.15), RT = 11.8, n = 48)
 
 }

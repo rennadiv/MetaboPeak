@@ -31,6 +31,6 @@ guarantee accurate calculation of true missingness, means, and variances.
 # stats_summary <- peakInfo(neg, n = 48)
 
 # Isolate data for specific peak ID "Peak_20"
-# single_peak <- peakInfo(neg, n = 48, ID = "Peak_20")
+# single_peak <- peakInfo(neg, n = 48, ID = "20")
 
 }
