@@ -275,6 +275,24 @@ print(stable_features$peak_names)
 
 The function returns a useful descriptive payload containing the extracted raw sample arrays, individual CV metrics, and the precise bar mid-point configurations, while dynamically safeguarding your default plotting console dimensions.
 
+## Tracking Maximal Feature Abundance
+
+When analyzing profiling runs, it is often critical to find which specific biological sample or treatment condition expresses a compound at its absolute highest intensity. This is particularly useful for identifying sample outliers, discovering positive control behaviors, or tracking down which sample to use for downstream targeted fragmentation (MS/MS) experiments. The package provides a direct query tool called `highestAbund()`.
+
+Instead of forcing you to subset your arrays manually, the function scans the peak matrix within a reliable mass tolerance window (`tolerance`). If multiple chromatographic features share that mass space, it searches across all of them simultaneously to isolate the single highest intensity coordinates and returns the exact text name of the sample it belongs to.
+
+```{r}
+# Find which sample column contains the highest intensity for mass 593.128
+top_expressing_sample <- highestAbund(
+  x = neg, 
+  mass = 593.128, 
+  n = 48,
+  tolerance = 0.01
+)
+
+print(paste("Maximum intensity observed in:", top_expressing_sample))
+```
+
 
 # Complete cases in treatment check
 
