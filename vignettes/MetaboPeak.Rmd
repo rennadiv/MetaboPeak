@@ -170,6 +170,39 @@ dim(filtered_neg)
 
 ## Peak correlations
 
+## Investigating Feature Relationships with Peak Correlation
+
+During mass-spectrometry preprocessing, tracking specific feature relationships—such as looking for matching adducts, in-source fragments, or verifying cross-mode alignments between positive and negative ionization datasets—is a common workflow step. The package provides a quick exploration utility called `checkCorr()` to evaluate whether two features share a synchronized chromatographic elution profile.
+
+The function maps targeted Mass-to-Charge Ratio (`m.z`) targets within an explicit mass tolerance window (defaulting to `0.05` Da). If multiple isobaric peaks match the profile window, the algorithm isolates the single feature tracking closest to your target Retention Time (`RT`), computes a profile correlation across all sample layers, and handles missing observations smoothly using complete pairwise steps.
+
+### Example: Verifying Cross-Mode Co-Elution
+
+```{r}
+# Evaluate correlation between 2 peaks in the same dataset
+correlation_result <- checkCorr(
+  x = pos, 
+  masses = c(595.2, 449.08), 
+  RT = 11.8, 
+  n = 48
+)
+
+print(paste("Feature Profile Correlation:", round(correlation_result, 3)))
+
+
+# Evaluate correlation between a positive mode peak and a corresponding negative mode target
+correlation_score <- checkCorr(
+  x = pos, 
+  y = neg, 
+  masses = c(595.2, 593.15), 
+  RT = 11.8, 
+  n = 48,
+  tolerance = 0.05
+)
+
+print(paste("Feature Profile Correlation:", round(correlation_score, 3)))
+```
+
 ## Background noise variability check
 
 ## Complete cases in treatment check
