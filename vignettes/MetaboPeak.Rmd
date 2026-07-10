@@ -75,6 +75,36 @@ For more information about each data set use help:
 The example dataset included with the package has already been processed using `treatGroup()`, which makes and unique code for combination of treatments.
 When analyzing your own experiments, apply `treatGroup()` to your treatment table before using downstream functions.
 
+## Isolating Biologically Relevant Windows Across Experimental Groups
+
+In mass-spectrometry studies, raw chromatograms always contain baseline noise, solvent fronts at the very beginning of the run, and harsh matrix wash-off spikes at the absolute end. 
+Trimming away these uninformative regions before performing complex statistical profiling is a critical step for a clean classification workflow.
+The package handles this evaluation with the `interestRegion()` utility function.
+
+Rather than forcing complex manual row indexing or data frame slicing syntax, this function scans your dataset and strips away early-eluting dead volumes and late-eluting background bleed. 
+It drops columns or rows outside your boundaries and returns a clean, reduced data frame identifying only those specific peak features that fall within your stable, biologically active elution timeframe.
+
+```{r}
+# Reduce the original data frame to retention times that are biologically relevant
+cleaned_data <- interestRegion(
+  x = neg, 
+  start = 1.4, 
+  end = 25.0
+)
+
+# Print a summary statement comparing the original and cleaned dataset sizes
+original_count <- nrow(neg)
+cleaned_count  <- nrow(cleaned_data)
+removed_count  <- original_count - cleaned_count
+
+cat(paste0(
+  "Data trimming complete.\n",
+  "- Original dataset features: ", original_count, "\n",
+  "- Retained biological features: ", cleaned_count, "\n",
+  "- Background noise features removed: ", removed_count, ".\n"
+))
+```
+
 ## Tracking Feature Completeness Across Experimental Groups
 
 In mass-spectrometry studies, determining whether a biomarker candidate is consistently expressed across your entire biological group cohort—or if it is compromised by zero markers and missing readings—is critical for rigorous classification.
