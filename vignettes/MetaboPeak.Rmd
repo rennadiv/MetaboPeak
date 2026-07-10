@@ -70,6 +70,29 @@ For more information about each data set use help:
 ?neg
 ```
 
+## Validating Table Architecture Before Downstream Calculations
+
+In mass-spectrometry studies, mismatched column architectures, accidental string symbols in peak matrices, or missing metadata targets (`m.z` or `RT`) will break statistical engines down the line. 
+To guarantee data integrity across your entire analysis, the package provides the structural integrity gateway, `checkFormat()`.
+
+Rather than forcing complex manual cell parsing and dimension indexing loops, this function scans your raw tables against your specified biological sample count (`n`).
+It maps out your matrix indices, checks column names, verifies abundance properties, and returns a reliable truth value confirming your dataset is perfectly optimized for MetaboPeak analytics.
+
+```{r}
+# Verify that the dataset structure matches package specifications
+format_is_valid <- checkFormat(
+  x = neg, 
+  n = 48
+)
+
+# Act on validation states before executing heavier compute steps
+if (format_is_valid) {
+  cat("Success: Table geometry, indices, and numerical modes match MetaboPeak standards.\n")
+} else {
+  stop("Warning: Data table architecture does not match requirements.")
+}
+```
+
 # Preprocessing with MetaboPeak
 
 The example dataset included with the package has already been processed using `treatGroup()`, which makes and unique code for combination of treatments.

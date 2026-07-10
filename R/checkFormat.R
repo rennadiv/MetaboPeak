@@ -1,25 +1,26 @@
-#' @title Data format control
+#' Data format control
+#'
 #' @description
-#' Given the data table and number of samples, the functions checks if the table
-#' is in good format for the rest of MetaboPeak functions
+#' Given the data table and number of samples, the function checks if the table
+#' is in the correct format for downstream MetaboPeak functions.
 #'
 #' @usage checkFormat(x, n)
-#' @param x data frame
-#' @param n number of samples
+#' @param x A data frame.
+#' @param n An integer specifying the expected number of sample columns.
 #'
 #' @details
 #' This function validates the structure of LC-MS peak tables.
 #'
 #' It checks whether:
 #' \itemize{
-#'   \item the input is a data.frame
-#'   \item required columns ("m.z", "RT") are present
-#'   \item the number of sample columns matches \code{n}
-#'   \item sample abundance columns are numeric
+#'   \item The input is a data.frame (or tibble).
+#'   \item Required columns ("m.z", "RT") are present.
+#'   \item The remaining columns match the expected sample count \code{n}.
+#'   \item Sample abundance columns contain strictly numeric values.
 #' }
 #'
-#' @returns Logical scalar with the value TRUE if everything is in order, or an
-#' error specifying where is problem.
+#' @returns Logical scalar with the value \code{TRUE} if everything is in order,
+#' or throws an error specifying where the problem lies.
 #'
 #' @export
 #'
@@ -28,16 +29,14 @@
 #' data("neg", package = "MetaboPeak")
 #' checkFormat(neg, 48)
 #' }
+checkFormat <- function(x, n) {
 
-
-checkFormat <- function(x, n){
-
-  # must be data frame
+  # 1. Must be a data frame or tibble
   if (!is.data.frame(x)) {
     stop("Input must be a data.frame")
   }
 
-  # required columns
+  # 2. Check for required metadata columns
   if (!"m.z" %in% colnames(x)) {
     stop("Column 'm.z' is missing")
   }
@@ -46,16 +45,31 @@ checkFormat <- function(x, n){
     stop("Column 'RT' is missing")
   }
 
-  # enough columns?
-  if (ncol(x) < n + 3) {
-    stop("Number of sample columns does not match n")
+  # 3. Dynamic Column Identification
+  # Instead of hardcoding 2:(n+1), we explicitly isolate sample columns
+  all_cols <- colnames(x)
+  metadata_cols <- c("m.z", "RT", "Peak names", "peak_id") # common labels to exclude
+
+  # Sample columns are everything that isn't explicitly m.z or RT
+  # (and optionally dropping an ID column if it exists)
+  sample_cols <- all_cols[!(all_cols %in% c("m.z", "RT"))]
+
+  # If there is a peak ID column at the start, drop it from the sample list
+  if (length(sample_cols) > n && sample_cols[1] %in% c("Peak names", "peak_id", "ID")) {
+    sample_cols <- sample_cols[-1]
   }
 
-  # sample columns should be numeric
-  sample_cols <- 2:(n+1)
+  # 4. Verify the number of sample columns matches 'n' exactly
+  if (length(sample_cols) != n) {
+    stop(paste0("Expected ", n, " sample columns, but found ", length(sample_cols), "."))
+  }
 
-  if (!all(sapply(x[, sample_cols], is.numeric))) {
-    stop("Sample abundance columns must be numeric")
+  # 5. Check that all identified sample columns are strictly numeric
+  # Loop works perfectly for both base R data.frames and tidyverse tibbles
+  for (col in sample_cols) {
+    if (!is.numeric(x[[col]])) {
+      stop(paste0("Sample abundance column '", col, "' must be numeric"))
+    }
   }
 
   return(TRUE)
