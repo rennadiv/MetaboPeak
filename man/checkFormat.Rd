@@ -7,27 +7,27 @@
 checkFormat(x, n)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{A data frame.}
 
-\item{n}{number of samples}
+\item{n}{An integer specifying the expected number of sample columns.}
 }
 \value{
-Logical scalar with the value TRUE if everything is in order, or an
-error specifying where is problem.
+Logical scalar with the value \code{TRUE} if everything is in order,
+or throws an error specifying where the problem lies.
 }
 \description{
-Given the data table and number of samples, the functions checks if the table
-is in good format for the rest of MetaboPeak functions
+Given the data table and number of samples, the function checks if the table
+is in the correct format for downstream MetaboPeak functions.
 }
 \details{
 This function validates the structure of LC-MS peak tables.
 
 It checks whether:
 \itemize{
-  \item the input is a data.frame
-  \item required columns ("m.z", "RT") are present
-  \item the number of sample columns matches \code{n}
-  \item sample abundance columns are numeric
+  \item The input is a data.frame (or tibble).
+  \item Required columns ("m.z", "RT") are present.
+  \item The remaining columns match the expected sample count \code{n}.
+  \item Sample abundance columns contain strictly numeric values.
 }
 }
 \examples{
