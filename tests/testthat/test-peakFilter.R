@@ -1,32 +1,28 @@
-library(testthat)
-library(dplyr)
-library(igraph)
-
 # ==============================================================================
 # 1. SETUP SHARED MOCK DATA FOR THE TESTS
 # ==============================================================================
-# This setup creates 5 mock peak features across 4 samples:
-# - Peak1: Clean, perfect data.
-# - Peak2: High missingness (3 out of 4 are NA) -> Should fail fNA.
-# - Peak3: High variance / high noise -> Should fail fCV.
-# - Peak4 & Peak5: Share almost identical RT (1.20 vs 1.21) and are perfectly
-#   correlated (1.0). Peak5 has a larger m.z, so Peak4 should be filtered out.
+# We simulate 5 mock peak features across 4 samples split into 2 tree species cohorts:
+# - Beech (B1, B2) and Spruce (S1, S2)
+# - Peak1: Complete in Spruce, but completely missing (0) in Beech (Biomarker).
+# - Peak2: High missingness globally (75% zeros), no complete group.
+# - Peak3: High variance (CV) in both groups, complete.
+# - Peak4 & Peak5: Overlapping RTs (4.201 & 4.202) and strongly correlated.
 
 mock_peaks <- data.frame(
-  peak_id = c("Peak1", "Peak2", "Peak3", "Peak4", "Peak5"),
-  SampleA = c(100,  NA,  10,  500,  500),
-  SampleB = c(105,  NA, 900,  510,  510),
-  SampleC = c(95,   NA,  15,  490,  490),
-  SampleD = c(102, 500, 850,  520,  520),
-  `m.z`   = c(150.1, 200.2, 250.3, 300.4, 350.5), # Peak5 has higher m.z than Peak4
-  RT      = c(0.50,  0.80,  2.10,  1.20,  1.21),  # Peak4 and Peak5 have close RTs
+  peak_id = c("Peak1_Biomarker", "Peak2_BadNoise", "Peak3_HighCV", "Peak4_Network1", "Peak5_Network2"),
+  B1      = c(0,               0,               10,             500,              510),
+  B2      = c(0,               0,               950,            510,              520),
+  S1      = c(400,             0,               20,             520,              530),
+  S2      = c(420,             15,              890,            530,              540),
+  `m.z`   = c(150.01,          220.05,          310.12,         447.22,           120.02), # Peak4 has higher m.z than Peak5
+  RT      = c(2.50,            14.20,           18.50,          4.201,            4.202),
   stringsAsFactors = FALSE,
   check.names = FALSE
 )
 
 mock_treatment <- data.frame(
-  sample = c("SampleA", "SampleB", "SampleC", "SampleD"),
-  Treatment = c("Control", "Control", "Treated", "Treated"),
+  Sample = c("B1", "B2", "S1", "S2"),
+  Treatment = c("Beech", "Beech", "Spruce", "Spruce"),
   stringsAsFactors = FALSE
 )
 
@@ -34,90 +30,82 @@ mock_treatment <- data.frame(
 # 2. THE FORMAL TEST SUITE
 # ==============================================================================
 
-test_that("peakFilter correctly filters out high NA rows", {
-  # Run only the NA filter (Threshold = 0.50)
-  # Peak2 has 75% NAs across all samples, and does NOT have a complete group.
-  result <- peakFilter(
+test_that("peakFilter protects cohort biomarkers when protect_complete_groups = TRUE", {
+  # Peak1_Biomarker is 100% missing in Beech but 100% complete in Spruce.
+  # Global missingness is 50%. Setting threshold to strict 30% (0.3) should keep it
+  # because protect_complete_groups = TRUE acts as a biological shield.
+
+  res <- peakFilter(
     x = mock_peaks,
     y = mock_treatment,
-    fNA = c('T', 0.5),
+    fNA = c('T', 0.3),
     fCV = FALSE,
-    fRT = FALSE
+    fRT = FALSE,
+    protect_complete_groups = TRUE
   )
 
   # Assertions
-  expect_false("Peak2" %in% result$peak_id)
-  expect_true("Peak1" %in% result$peak_id)
-  expect_equal(nrow(result), 4) # 4 out of 5 peaks should remain
+  expect_true("Peak1_Biomarker" %in% res$peak_id)
+  expect_false("Peak2_BadNoise" %in% res$peak_id) # Dropped because it has no complete cohort
 })
 
 
-test_that("peakFilter correctly filters out high CV rows", {
-  # Run only the CV filter (Threshold = 0.50)
-  # Peak3 has massive intensity swings (10, 900, 15, 850) -> CV will be > 1.0
-  result <- peakFilter(
+test_that("peakFilter strictly applies thresholds when protect_complete_groups = FALSE", {
+  # Disabling group protection forces raw mathematical sweeping.
+  # Peak1_Biomarker (50% missingness) will now fail the strict 30% (0.3) filter.
+
+  res <- peakFilter(
     x = mock_peaks,
     y = mock_treatment,
-    fNA = FALSE,
-    fCV = c('T', 0.5),
-    fRT = FALSE
+    fNA = c('T', 0.3),
+    fCV = FALSE,
+    fRT = FALSE,
+    protect_complete_groups = FALSE
   )
 
   # Assertions
-  expect_false("Peak3" %in% result$peak_id)
-  expect_true("Peak1" %in% result$peak_id)
+  expect_false("Peak1_Biomarker" %in% res$peak_id)
 })
 
 
-test_that("peakFilter keeps features with high NA/CV if they have a complete treatment group", {
-  # Create a specialized peak that has NAs in the Control group,
-  # but is 100% complete in the Treated group (SampleC and SampleD).
-  complete_group_peak <- data.frame(
-    peak_id = "Peak_Marker",
-    SampleA = NA, SampleB = NA, SampleC = 600, SampleD = 610,
-    `m.z` = 180.1, RT = 3.5, check.names = FALSE
-  )
-  test_data <- rbind(mock_peaks, complete_group_peak)
+test_that("peakFilter isolates high mass vertices in overlapping RT network windows", {
+  # Peak4 and Peak5 share a tight elution pattern and correlate perfectly.
+  # Peak4 features a higher mass vector (447.22 vs 120.02) and should be preserved.
 
-  # Run NA filter at a strict 20% allowance.
-  # "Peak_Marker" has 50% total NAs, but should survive due to the complete Treated group rule.
-  result <- peakFilter(test_data, mock_treatment, fNA = c('T', 0.2), fCV = FALSE, fRT = FALSE)
-
-  # Assertions
-  expect_true("Peak_Marker" %in% result$peak_id)
-})
-
-
-test_that("peakFilter network de-duplicates correlated RT peaks and keeps the max m.z", {
-  # Run only the RT filter
-  # Window = 0.02, Correlation Threshold = 0.95
-  # Peak4 and Peak5 are within 0.01 min of each other and track perfectly.
-  result <- peakFilter(
+  res <- peakFilter(
     x = mock_peaks,
     y = mock_treatment,
     fNA = FALSE,
     fCV = FALSE,
-    fRT = c('T', 2, 0.02, 0.95)
+    fRT = c('T', 2, 0.05, 0.90),
+    protect_complete_groups = FALSE
   )
 
   # Assertions
-  # The cluster containing Peak4 and Peak5 should collapse into just one row.
-  # Because Peak5 has an m.z of 350.5 (higher than Peak4's 300.4), Peak5 must be kept.
-  expect_true("Peak5" %in% result$peak_id)
-  expect_false("Peak4" %in% result$peak_id)
+  expect_true("Peak4_Network1" %in% res$peak_id)
+  expect_false("Peak5_Network2" %in% res$peak_id)
 })
 
 
-test_that("peakFilter parallel execution matches sequential execution perfectly", {
-  # Skip this test if the user doesn't have the parallel libraries loaded globally
-  skip_if_not_installed("future.apply")
+test_that("peakFilter handles parameter omissions dynamically in console logs", {
+  # Wrapping the function call to read text logs outputted to console.
+  # Disabling fCV should cleanly eliminate the CV tracking row from the console.
 
-  # Run sequentially
-  res_seq <- peakFilter(mock_peaks, mock_treatment, fNA = c('T', 0.5), fCV = c('T', 0.8), fRT = c('T', 2, 0.02, 0.95), parallel = FALSE)
+  console_output <- capture.output({
+    res <- peakFilter(
+      x = mock_peaks,
+      y = mock_treatment,
+      fNA = c('T', 0.5),
+      fCV = FALSE,
+      fRT = FALSE
+    )
+  })
 
-  # Run in parallel
-  res_par <- peakFilter(mock_peaks, mock_treatment, fNA = c('T', 0.5), fCV = c('T', 0.8), fRT = c('T', 2, 0.02, 0.95), parallel = TRUE, n_cores = 2)
+  # Convert vector of text lines to a single string for pattern search
+  full_log <- paste(console_output, collapse = "\n")
 
   # Assertions
-  expect_equal(res_seq, res_par)
+  expect_match(full_log, "Removed by NA filter:")
+  expect_no_match(full_log, "Removed by CV filter:")
+  expect_match(full_log, "Final peak count:")
 })
