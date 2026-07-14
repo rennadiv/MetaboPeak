@@ -2,29 +2,32 @@
 % Please edit documentation in R/interestRegion.R
 \name{interestRegion}
 \alias{interestRegion}
-\title{Filter peaks in retention range}
+\title{Filter peaks in a retention time range}
 \usage{
 interestRegion(x, start, end)
 }
 \arguments{
-\item{x}{data frame}
+\item{x}{A data frame containing chromatography data.}
 
-\item{start}{numeric value from which RT should the peaks be picked}
+\item{start}{A numeric value representing the starting RT window limit.}
 
-\item{end}{numeric value to which RT should the peaks be picked}
+\item{end}{A numeric value representing the ending RT window limit.}
 }
 \value{
-A reduced data frame.
+A filtered data frame containing only rows within the specified RT range.
 }
 \description{
-This function reduces the original data frame to retention times that are biological relevant (without the noise at the beginning and end).
-This region needs to be defined by the user based on length of their elution time and chromatograms.
+This function reduces the original data frame to retention times (RT) that
+are biologically relevant, removing background noise from the beginning
+and the end of the run.
 }
 \details{
-The format of the data frame should be: Peak names|abundances of samples|m.z|RT|...
+The input data frame `x` must contain a column explicitly named \code{RT}.
+A typical format looks like:
+\code{Peak names | abundances of samples | m.z | RT | ...}
 }
 \examples{
-neg_small <- interestRegion(neg, 1.4, 25)
-
+# Assuming 'neg' is a data frame with an 'RT' column:
+# neg_small <- interestRegion(neg, 1.4, 25)
 
 }
